@@ -1,0 +1,39 @@
+
+# Build Output
+build/
+out/
+dist/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+Makefile
+
+# Binaries
+*.exe
+*.dll
+*.so
+*.a
+*.o
+*.obj
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary
+*.tmp
+*.temp
+
+# Internal planning docs
+docs/keydrop_integration_plan.md
