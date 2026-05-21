@@ -2,38 +2,17 @@
 
 namespace keydrop {
 
-void PacketBuilder::write_u8(u8 value)
+PacketBuilder::PacketBuilder()
+    : buffer_()
 {
-    buffer_.write(value);
 }
 
-void PacketBuilder::write_u16(u16 value)
+void PacketBuilder::write_bytes(
+    const byte* data,
+    usize size
+)
 {
-    buffer_.write(
-        static_cast<byte>(
-            value & 0xFF
-        )
-    );
-
-    buffer_.write(
-        static_cast<byte>(
-            (value >> 8) & 0xFF
-        )
-    );
-}
-
-void PacketBuilder::write_u32(u32 value)
-{
-    for (int i = 0; i < 4; ++i)
-    {
-        buffer_.write(
-            static_cast<byte>(
-                (value >> (8 * i))
-                &
-                0xFF
-            )
-        );
-    }
+    buffer_.append(data, size);
 }
 
 const Buffer& PacketBuilder::buffer() const

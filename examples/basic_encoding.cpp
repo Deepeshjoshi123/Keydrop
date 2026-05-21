@@ -1,3 +1,4 @@
+#include <cassert>
 #include <iostream>
 
 #include "keydrop/core/packet_builder.hpp"
@@ -8,14 +9,12 @@ int main()
 {
     PacketBuilder builder;
 
-    builder.write_u8(32);
+    builder.write<u8>(1);
+    builder.write<u16>(500);
 
-    builder.write_u16(1000);
+    assert(builder.buffer().size() == 3);
 
-    builder.write_u32(50000);
-
-    const auto& packet =
-        builder.buffer();
+    const auto& packet = builder.buffer();
 
     std::cout
         << "Packet Size: "
@@ -37,6 +36,9 @@ int main()
 
     std::cout
         << "\n";
+
+    const byte raw[] = { 0xAA, 0xBB };
+    builder.write_bytes(raw, 2);
 
     return 0;
 }

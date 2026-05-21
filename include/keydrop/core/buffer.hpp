@@ -14,6 +14,9 @@ public:
 
     // Write one byte
     void write(byte value);
+    
+    // Append raw bytes
+    void append(const byte* data, usize size);
 
     // Read one byte
     byte read(usize index) const;

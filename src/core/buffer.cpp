@@ -9,6 +9,11 @@ void Buffer::write(byte value)
     bytes_.push_back(value);
 }
 
+void Buffer::append(const byte* data, usize size)
+{
+    bytes_.insert(bytes_.end(), data, data + size);
+}
+
 byte Buffer::read(usize index) const
 {
     if (index >= bytes_.size())
@@ -50,5 +55,4 @@ const std::vector<byte>& Buffer::data() const
 {
     return bytes_;
 }
-
 }

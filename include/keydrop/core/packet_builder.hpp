@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 #include "keydrop/core/buffer.hpp"
 #include "keydrop/core/types.hpp"
 
@@ -8,13 +10,29 @@ namespace keydrop {
 class PacketBuilder {
 public:
 
-    PacketBuilder() = default;
+    PacketBuilder();
 
-    void write_u8(u8 value);
+    template<typename T>
+    void write(const T& value)
+    {
+        static_assert(
+            std::is_trivially_copyable<T>::value,
+            "PacketBuilder::write requires a trivially copyable type"
+        );
 
-    void write_u16(u16 value);
+        const auto* ptr =
+            reinterpret_cast<const byte*>(&value);
 
-    void write_u32(u32 value);
+        buffer_.append(
+            ptr,
+            sizeof(T)
+        );
+    }
+
+    void write_bytes(
+        const byte* data,
+        usize size
+    );
 
     const Buffer& buffer() const;
 
