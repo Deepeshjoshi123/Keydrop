@@ -1,44 +1,28 @@
-#include <cassert>
 #include <iostream>
 
-#include "keydrop/core/packet_builder.hpp"
+#include "keydrop/core/endian.hpp"
 
 using namespace keydrop;
 
 int main()
 {
-    PacketBuilder builder;
+    auto system =
+        system_endian();
 
-    builder.write<u8>(1);
-    builder.write<u16>(500);
-
-    assert(builder.buffer().size() == 3);
-
-    const auto& packet = builder.buffer();
-
-    std::cout
-        << "Packet Size: "
-        << packet.size()
-        << "\n";
-
-    for (
-        usize i = 0;
-        i < packet.size();
-        ++i
+    if (
+        system
+        ==
+        Endian::Little
     )
     {
         std::cout
-            << static_cast<int>(
-                packet.read(i)
-            )
-            << " ";
+            << "Little Endian\n";
     }
-
-    std::cout
-        << "\n";
-
-    const byte raw[] = { 0xAA, 0xBB };
-    builder.write_bytes(raw, 2);
+    else
+    {
+        std::cout
+            << "Big Endian\n";
+    }
 
     return 0;
 }
