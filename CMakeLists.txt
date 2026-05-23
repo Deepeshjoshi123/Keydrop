@@ -73,10 +73,27 @@ target_link_libraries(
 # Testing
 enable_testing()
 
+add_executable(
+    test_packet_reader
+    tests/test_packet_reader.cpp
+)
+
+target_link_libraries(
+    test_packet_reader
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME packet_reader
+    COMMAND test_packet_reader
+)
+
 # Output
 set_target_properties(
     keydrop
     basic_encoding
+    test_packet_reader
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
