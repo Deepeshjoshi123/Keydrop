@@ -31,6 +31,7 @@ target_sources(
         src/core/packet_reader.cpp
         src/core/endian.cpp
         src/schema/schema_types.cpp
+        src/schema/schema_registry.cpp
 )
 
 # Includes
@@ -123,6 +124,22 @@ add_test(
     COMMAND test_schema_types
 )
 
+add_executable(
+    test_schema_registry
+    tests/test_schema_registry.cpp
+)
+
+target_link_libraries(
+    test_schema_registry
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME schema_registry
+    COMMAND test_schema_registry
+)
+
 # Output
 set_target_properties(
     keydrop
@@ -130,6 +147,7 @@ set_target_properties(
     test_packet_reader
     test_encoder
     test_schema_types
+    test_schema_registry
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
