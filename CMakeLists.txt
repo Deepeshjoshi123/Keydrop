@@ -30,6 +30,7 @@ target_sources(
         src/core/packet_builder.cpp
         src/core/packet_reader.cpp
         src/core/endian.cpp
+        src/schema/schema_types.cpp
 )
 
 # Includes
@@ -106,12 +107,29 @@ add_test(
     COMMAND test_encoder
 )
 
+add_executable(
+    test_schema_types
+    tests/test_schema_types.cpp
+)
+
+target_link_libraries(
+    test_schema_types
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME schema_types
+    COMMAND test_schema_types
+)
+
 # Output
 set_target_properties(
     keydrop
     basic_encoding
     test_packet_reader
     test_encoder
+    test_schema_types
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
