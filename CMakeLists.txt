@@ -26,6 +26,7 @@ target_sources(
     keydrop
     PRIVATE
         src/core/buffer.cpp
+        src/core/encoder.cpp
         src/core/packet_builder.cpp
         src/core/packet_reader.cpp
         src/core/endian.cpp
@@ -89,11 +90,28 @@ add_test(
     COMMAND test_packet_reader
 )
 
+add_executable(
+    test_encoder
+    tests/test_encoder.cpp
+)
+
+target_link_libraries(
+    test_encoder
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME encoder
+    COMMAND test_encoder
+)
+
 # Output
 set_target_properties(
     keydrop
     basic_encoding
     test_packet_reader
+    test_encoder
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
