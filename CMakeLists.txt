@@ -33,6 +33,7 @@ target_sources(
         src/schema/schema_types.cpp
         src/schema/schema_registry.cpp
         src/schema/schema_validator.cpp
+        src/schema/field_mapper.cpp
 )
 
 # Includes
@@ -157,6 +158,22 @@ add_test(
     COMMAND test_schema_validator
 )
 
+add_executable(
+    test_field_mapper
+    tests/test_field_mapper.cpp
+)
+
+target_link_libraries(
+    test_field_mapper
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME field_mapper
+    COMMAND test_field_mapper
+)
+
 # Output
 set_target_properties(
     keydrop
@@ -166,6 +183,7 @@ set_target_properties(
     test_schema_types
     test_schema_registry
     test_schema_validator
+    test_field_mapper
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
