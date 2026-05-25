@@ -32,6 +32,7 @@ target_sources(
         src/core/endian.cpp
         src/schema/schema_types.cpp
         src/schema/schema_registry.cpp
+        src/schema/schema_validator.cpp
 )
 
 # Includes
@@ -140,6 +141,22 @@ add_test(
     COMMAND test_schema_registry
 )
 
+add_executable(
+    test_schema_validator
+    tests/test_schema_validator.cpp
+)
+
+target_link_libraries(
+    test_schema_validator
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME schema_validator
+    COMMAND test_schema_validator
+)
+
 # Output
 set_target_properties(
     keydrop
@@ -148,6 +165,7 @@ set_target_properties(
     test_encoder
     test_schema_types
     test_schema_registry
+    test_schema_validator
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
