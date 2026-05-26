@@ -34,6 +34,8 @@ target_sources(
         src/schema/schema_registry.cpp
         src/schema/schema_validator.cpp
         src/schema/field_mapper.cpp
+        src/schema/json_types.cpp
+        src/schema/schema_runtime.cpp
 )
 
 # Includes
@@ -174,6 +176,22 @@ add_test(
     COMMAND test_field_mapper
 )
 
+add_executable(
+    test_schema_runtime
+    tests/test_schema_runtime.cpp
+)
+
+target_link_libraries(
+    test_schema_runtime
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME schema_runtime
+    COMMAND test_schema_runtime
+)
+
 # Output
 set_target_properties(
     keydrop
@@ -184,6 +202,7 @@ set_target_properties(
     test_schema_registry
     test_schema_validator
     test_field_mapper
+    test_schema_runtime
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
