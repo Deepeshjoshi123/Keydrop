@@ -192,7 +192,16 @@ SchemaRuntimeResult SchemaRuntime::send(
         return {SchemaRuntimeCode::mapping_failed, mapped.message};
     }
 
-    out_packet = encoder.buffer();
+    Buffer encoded_packet = encoder.buffer();
+    Buffer optimized_packet;
+    const RuntimeOptimizerResult optimize_result =
+        RuntimeOptimizer::optimize_packet(*schema, encoded_packet, optimized_packet, optimizer_config_);
+    if (!optimize_result.ok)
+    {
+        return {SchemaRuntimeCode::decode_failed, "Runtime optimization failed."};
+    }
+
+    out_packet = optimize_result.applied ? optimized_packet : encoded_packet;
     return {SchemaRuntimeCode::ok, "Packet encoded successfully."};
 }
 
@@ -209,14 +218,23 @@ SchemaRuntimeResult SchemaRuntime::receive(
 
     try
     {
-        PacketReader reader(packet);
-        const u16 message_id = reader.read_u16();
-
+        const u16 message_id = static_cast<u16>(packet.data()[0]) | (static_cast<u16>(packet.data()[1]) << 8);
         const SchemaDef* schema = registry_.find_by_message_id(message_id);
         if (schema == nullptr)
         {
             return {SchemaRuntimeCode::schema_not_found, "Schema not found for message_id."};
         }
+
+        Buffer decode_packet;
+        const RuntimeOptimizerResult deoptimize_result =
+            RuntimeOptimizer::deoptimize_packet(*schema, packet, decode_packet);
+        if (!deoptimize_result.ok)
+        {
+            return {SchemaRuntimeCode::decode_failed, "Runtime deoptimization failed."};
+        }
+
+        PacketReader reader(decode_packet);
+        (void)reader.read_u16();
 
         OrderedPayload ordered;
         ordered.reserve(schema->fields.size());
@@ -262,6 +280,16 @@ SchemaRuntimeResult SchemaRuntime::receive(
 const SchemaRegistry& SchemaRuntime::registry() const
 {
     return registry_;
+}
+
+void SchemaRuntime::set_optimizer_config(const RuntimeOptimizerConfig& config)
+{
+    optimizer_config_ = config;
+}
+
+const RuntimeOptimizerConfig& SchemaRuntime::optimizer_config() const
+{
+    return optimizer_config_;
 }
 
 SchemaRuntimeResult SchemaRuntime::send_json(

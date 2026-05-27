@@ -35,6 +35,7 @@ target_sources(
         src/schema/schema_validator.cpp
         src/schema/field_mapper.cpp
         src/schema/json_types.cpp
+        src/schema/runtime_optimizer.cpp
         src/schema/schema_runtime.cpp
 )
 
@@ -192,6 +193,22 @@ add_test(
     COMMAND test_schema_runtime
 )
 
+add_executable(
+    test_runtime_optimizer
+    tests/test_runtime_optimizer.cpp
+)
+
+target_link_libraries(
+    test_runtime_optimizer
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME runtime_optimizer
+    COMMAND test_runtime_optimizer
+)
+
 # Output
 set_target_properties(
     keydrop
@@ -203,6 +220,7 @@ set_target_properties(
     test_schema_validator
     test_field_mapper
     test_schema_runtime
+    test_runtime_optimizer
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
