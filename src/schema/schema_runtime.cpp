@@ -10,8 +10,9 @@
 namespace keydrop {
 
 namespace {
+constexpr u16 kDictionaryStringReferenceMarker = 0xFFFF;
 
-FieldValue read_field_value(PacketReader& reader, FieldType type)
+FieldValue read_field_value(PacketReader& reader, FieldType type, AdaptiveDictionary& dictionary)
 {
     switch (type)
     {
@@ -23,7 +24,30 @@ FieldValue read_field_value(PacketReader& reader, FieldType type)
     case FieldType::i32: return FieldValue::from_i32(reader.read_i32());
     case FieldType::f32: return FieldValue::from_f32(reader.read_f32());
     case FieldType::f64: return FieldValue::from_f64(reader.read_f64());
-    case FieldType::string: return FieldValue::from_string(reader.read_string());
+    case FieldType::string:
+    {
+        const u16 marker_or_size = reader.read_u16();
+        if (marker_or_size == kDictionaryStringReferenceMarker)
+        {
+            const u16 id = reader.read_u16();
+            const AdaptiveDictionaryResult looked = dictionary.lookup_value(id);
+            if (!looked.ok())
+            {
+                throw std::out_of_range("Dictionary ID lookup miss");
+            }
+            return FieldValue::from_string(looked.value);
+        }
+
+        std::string decoded;
+        decoded.reserve(marker_or_size);
+        for (u16 i = 0; i < marker_or_size; ++i)
+        {
+            decoded.push_back(static_cast<char>(reader.read_u8()));
+        }
+
+        (void)dictionary.create_or_get(decoded);
+        return FieldValue::from_string(decoded);
+    }
     case FieldType::bytes:
     {
         const u16 size = reader.read_u16();
@@ -152,6 +176,51 @@ JsonValue field_value_to_json_value(const FieldValue& field_value)
     return JsonValue::from_integer(0);
 }
 
+void encode_field_value(
+    Encoder& encoder,
+    const FieldValue& value,
+    AdaptiveDictionary& dictionary,
+    const AdaptiveDictionaryConfig& dictionary_config
+)
+{
+    switch (value.type)
+    {
+    case FieldType::u8: encoder.write_u8(value.as_u8); return;
+    case FieldType::u16: encoder.write_u16(value.as_u16); return;
+    case FieldType::u32: encoder.write_u32(value.as_u32); return;
+    case FieldType::i8: encoder.write_i8(value.as_i8); return;
+    case FieldType::i16: encoder.write_i16(value.as_i16); return;
+    case FieldType::i32: encoder.write_i32(value.as_i32); return;
+    case FieldType::f32: encoder.write_f32(value.as_f32); return;
+    case FieldType::f64: encoder.write_f64(value.as_f64); return;
+    case FieldType::bytes:
+        encoder.write_u16(static_cast<u16>(value.as_bytes.size()));
+        if (!value.as_bytes.empty())
+        {
+            encoder.write_bytes(value.as_bytes.data(), value.as_bytes.size());
+        }
+        return;
+    case FieldType::string:
+    {
+        if (dictionary_config.enabled && dictionary_config.enable_string_values)
+        {
+            const AdaptiveDictionaryResult lookup = dictionary.lookup_id(value.as_string);
+            if (lookup.ok())
+            {
+                encoder.write_u16(kDictionaryStringReferenceMarker);
+                encoder.write_u16(lookup.id);
+                return;
+            }
+
+            (void)dictionary.create_or_get(value.as_string);
+        }
+
+        encoder.write_string(value.as_string);
+        return;
+    }
+    }
+}
+
 } // namespace
 
 SchemaRegistryStatus SchemaRuntime::register_schema(const SchemaDef& schema)
@@ -186,10 +255,16 @@ SchemaRuntimeResult SchemaRuntime::send(
     Encoder encoder;
     encoder.write_u16(schema->message_id);
 
-    const FieldMapperResult mapped = FieldMapper::encode_named_payload(*schema, payload, encoder);
+    OrderedPayload ordered_payload;
+    const FieldMapperResult mapped = FieldMapper::map_named_to_ordered(*schema, payload, ordered_payload);
     if (!mapped.ok())
     {
         return {SchemaRuntimeCode::mapping_failed, mapped.message};
+    }
+
+    for (usize i = 0; i < ordered_payload.size(); ++i)
+    {
+        encode_field_value(encoder, ordered_payload[i], dictionary_, dictionary_.config());
     }
 
     Buffer encoded_packet = encoder.buffer();
@@ -240,7 +315,7 @@ SchemaRuntimeResult SchemaRuntime::receive(
         ordered.reserve(schema->fields.size());
         for (usize i = 0; i < schema->fields.size(); ++i)
         {
-            ordered.push_back(read_field_value(reader, schema->fields[i].type));
+            ordered.push_back(read_field_value(reader, schema->fields[i].type, dictionary_));
         }
 
         std::vector<FieldType> decoded_types;
@@ -290,6 +365,21 @@ void SchemaRuntime::set_optimizer_config(const RuntimeOptimizerConfig& config)
 const RuntimeOptimizerConfig& SchemaRuntime::optimizer_config() const
 {
     return optimizer_config_;
+}
+
+void SchemaRuntime::set_dictionary_config(const AdaptiveDictionaryConfig& config)
+{
+    dictionary_.configure(config);
+}
+
+const AdaptiveDictionaryConfig& SchemaRuntime::dictionary_config() const
+{
+    return dictionary_.config();
+}
+
+void SchemaRuntime::reset_dictionary()
+{
+    dictionary_.reset();
 }
 
 SchemaRuntimeResult SchemaRuntime::send_json(

@@ -5,6 +5,7 @@
 #include "keydrop/core/buffer.hpp"
 #include "keydrop/schema/field_mapper.hpp"
 #include "keydrop/schema/json_types.hpp"
+#include "keydrop/schema/adaptive_dictionary.hpp"
 #include "keydrop/schema/runtime_optimizer.hpp"
 #include "keydrop/schema/schema_registry.hpp"
 #include "keydrop/schema/schema_validator.hpp"
@@ -65,10 +66,14 @@ public:
     const SchemaRegistry& registry() const;
     void set_optimizer_config(const RuntimeOptimizerConfig& config);
     const RuntimeOptimizerConfig& optimizer_config() const;
+    void set_dictionary_config(const AdaptiveDictionaryConfig& config);
+    const AdaptiveDictionaryConfig& dictionary_config() const;
+    void reset_dictionary();
 
 private:
     SchemaRegistry registry_;
     RuntimeOptimizerConfig optimizer_config_;
+    mutable AdaptiveDictionary dictionary_;
 };
 
 }

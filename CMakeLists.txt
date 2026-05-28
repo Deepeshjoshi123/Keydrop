@@ -36,6 +36,7 @@ target_sources(
         src/schema/field_mapper.cpp
         src/schema/json_types.cpp
         src/schema/runtime_optimizer.cpp
+        src/schema/adaptive_dictionary.cpp
         src/schema/schema_runtime.cpp
 )
 
@@ -209,6 +210,22 @@ add_test(
     COMMAND test_runtime_optimizer
 )
 
+add_executable(
+    test_adaptive_dictionary
+    tests/test_adaptive_dictionary.cpp
+)
+
+target_link_libraries(
+    test_adaptive_dictionary
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME adaptive_dictionary
+    COMMAND test_adaptive_dictionary
+)
+
 # Output
 set_target_properties(
     keydrop
@@ -221,6 +238,7 @@ set_target_properties(
     test_field_mapper
     test_schema_runtime
     test_runtime_optimizer
+    test_adaptive_dictionary
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
