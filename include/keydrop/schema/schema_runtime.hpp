@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "keydrop/core/buffer.hpp"
 #include "keydrop/schema/field_mapper.hpp"
@@ -9,6 +11,7 @@
 #include "keydrop/schema/runtime_optimizer.hpp"
 #include "keydrop/schema/schema_registry.hpp"
 #include "keydrop/schema/schema_validator.hpp"
+#include "keydrop/schema/stream_optimizer.hpp"
 
 namespace keydrop {
 
@@ -63,17 +66,38 @@ public:
         JsonObject& out_json_payload
     ) const;
 
+    SchemaRuntimeResult send_stream(
+        const std::string& schema_name,
+        const NamedPayload& payload,
+        Buffer& out_packet,
+        bool& out_has_packet
+    ) const;
+
+    SchemaRuntimeResult flush_stream(
+        Buffer& out_packet,
+        bool& out_has_packet
+    ) const;
+
+    SchemaRuntimeResult receive_stream(
+        const Buffer& packet,
+        std::vector<std::pair<std::string, NamedPayload>>& out_messages
+    ) const;
+
     const SchemaRegistry& registry() const;
     void set_optimizer_config(const RuntimeOptimizerConfig& config);
     const RuntimeOptimizerConfig& optimizer_config() const;
     void set_dictionary_config(const AdaptiveDictionaryConfig& config);
     const AdaptiveDictionaryConfig& dictionary_config() const;
     void reset_dictionary();
+    void set_stream_optimizer_config(const StreamOptimizerConfig& config);
+    const StreamOptimizerConfig& stream_optimizer_config() const;
+    void reset_stream_optimizer();
 
 private:
     SchemaRegistry registry_;
     RuntimeOptimizerConfig optimizer_config_;
     mutable AdaptiveDictionary dictionary_;
+    mutable StreamOptimizer stream_optimizer_;
 };
 
 }

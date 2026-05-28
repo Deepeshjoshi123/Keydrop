@@ -1,6 +1,7 @@
 #include "keydrop/schema/schema_runtime.hpp"
 
 #include <limits>
+#include <deque>
 #include <stdexcept>
 #include <vector>
 
@@ -454,6 +455,84 @@ SchemaRuntimeResult SchemaRuntime::receive_json(
     }
 
     return {SchemaRuntimeCode::ok, "JSON payload decoded successfully."};
+}
+
+SchemaRuntimeResult SchemaRuntime::send_stream(
+    const std::string& schema_name,
+    const NamedPayload& payload,
+    Buffer& out_packet,
+    bool& out_has_packet
+) const
+{
+    Buffer base_packet;
+    const SchemaRuntimeResult send_result = send(schema_name, payload, base_packet);
+    if (!send_result.ok())
+    {
+        out_has_packet = false;
+        return send_result;
+    }
+
+    StreamOptimizationOutput stream_out;
+    stream_optimizer_.optimize_outgoing(schema_name, payload, base_packet, stream_out);
+    out_has_packet = stream_out.emit_now;
+    if (out_has_packet)
+    {
+        out_packet = stream_out.packet;
+    }
+    return {SchemaRuntimeCode::ok, "Stream packet processed."};
+}
+
+SchemaRuntimeResult SchemaRuntime::flush_stream(
+    Buffer& out_packet,
+    bool& out_has_packet
+) const
+{
+    out_has_packet = stream_optimizer_.flush_batched(out_packet);
+    return {SchemaRuntimeCode::ok, out_has_packet ? "Batched stream packet flushed." : "No batched packets pending."};
+}
+
+SchemaRuntimeResult SchemaRuntime::receive_stream(
+    const Buffer& packet,
+    std::vector<std::pair<std::string, NamedPayload>>& out_messages
+) const
+{
+    out_messages.clear();
+    std::deque<Buffer> packets;
+    if (!stream_optimizer_.expand_incoming(packet, packets))
+    {
+        return {SchemaRuntimeCode::decode_failed, "Invalid stream packet envelope."};
+    }
+
+    while (!packets.empty())
+    {
+        std::string schema_name;
+        NamedPayload payload;
+        const SchemaRuntimeResult result = receive(packets.front(), schema_name, payload);
+        if (!result.ok())
+        {
+            return result;
+        }
+
+        out_messages.push_back(std::make_pair(schema_name, payload));
+        packets.pop_front();
+    }
+
+    return {SchemaRuntimeCode::ok, "Stream packet decoded."};
+}
+
+void SchemaRuntime::set_stream_optimizer_config(const StreamOptimizerConfig& config)
+{
+    stream_optimizer_.configure(config);
+}
+
+const StreamOptimizerConfig& SchemaRuntime::stream_optimizer_config() const
+{
+    return stream_optimizer_.config();
+}
+
+void SchemaRuntime::reset_stream_optimizer()
+{
+    stream_optimizer_.reset();
 }
 
 }

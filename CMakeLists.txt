@@ -37,6 +37,7 @@ target_sources(
         src/schema/json_types.cpp
         src/schema/runtime_optimizer.cpp
         src/schema/adaptive_dictionary.cpp
+        src/schema/stream_optimizer.cpp
         src/schema/schema_runtime.cpp
 )
 
@@ -226,6 +227,33 @@ add_test(
     COMMAND test_adaptive_dictionary
 )
 
+add_executable(
+    test_stream_optimizer
+    tests/test_stream_optimizer.cpp
+)
+
+target_link_libraries(
+    test_stream_optimizer
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME stream_optimizer
+    COMMAND test_stream_optimizer
+)
+
+add_executable(
+    stream_optimizer_benchmark
+    benchmarks/stream_optimizer_benchmark.cpp
+)
+
+target_link_libraries(
+    stream_optimizer_benchmark
+    PRIVATE
+        keydrop
+)
+
 # Output
 set_target_properties(
     keydrop
@@ -239,6 +267,8 @@ set_target_properties(
     test_schema_runtime
     test_runtime_optimizer
     test_adaptive_dictionary
+    test_stream_optimizer
+    stream_optimizer_benchmark
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
