@@ -30,6 +30,7 @@ target_sources(
         src/core/packet_builder.cpp
         src/core/packet_reader.cpp
         src/core/endian.cpp
+        src/reliability/corruption_detector.cpp
         src/schema/schema_types.cpp
         src/schema/schema_registry.cpp
         src/schema/schema_validator.cpp
@@ -244,6 +245,22 @@ add_test(
 )
 
 add_executable(
+    test_corruption_detector
+    tests/test_corruption_detector.cpp
+)
+
+target_link_libraries(
+    test_corruption_detector
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME corruption_detector
+    COMMAND test_corruption_detector
+)
+
+add_executable(
     stream_optimizer_benchmark
     benchmarks/stream_optimizer_benchmark.cpp
 )
@@ -268,6 +285,7 @@ set_target_properties(
     test_runtime_optimizer
     test_adaptive_dictionary
     test_stream_optimizer
+    test_corruption_detector
     stream_optimizer_benchmark
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
