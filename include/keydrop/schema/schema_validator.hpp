@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "keydrop/schema/field_mapper.hpp"
 #include "keydrop/schema/schema_registry.hpp"
 #include "keydrop/schema/schema_types.hpp"
 
@@ -18,8 +19,10 @@ enum class SchemaValidationCode {
     message_id_out_of_range,
     duplicate_schema_name,
     duplicate_message_id,
+    message_id_mismatch,
     payload_field_count_mismatch,
-    payload_field_type_mismatch
+    payload_field_type_mismatch,
+    payload_field_constraint_violation
 };
 
 struct SchemaValidationResult {
@@ -42,6 +45,16 @@ public:
     static SchemaValidationResult validate_payload_field_types(
         const SchemaDef& schema,
         const std::vector<FieldType>& payload_field_types
+    );
+
+    static SchemaValidationResult validate_message_id(
+        const SchemaDef& schema,
+        u16 message_id
+    );
+
+    static SchemaValidationResult validate_payload_values(
+        const SchemaDef& schema,
+        const OrderedPayload& payload
     );
 
 private:

@@ -29,6 +29,15 @@ int main()
     const SchemaRegistryStatus reg_status = runtime.register_schema(sensor_schema);
     assert(reg_status.ok());
 
+    const SchemaDef status_schema {
+        "StatusData",
+        9,
+        {
+            FieldDef {"status", FieldType::u8, 0, {}},
+        }
+    };
+    assert(runtime.register_schema(status_schema).ok());
+
     NamedPayload payload;
     payload["device_id"] = FieldValue::from_string("sensor_01");
     payload["humidity"] = FieldValue::from_u16(700);
@@ -62,6 +71,12 @@ int main()
     const SchemaRuntimeResult send_missing = runtime.send("SensorData", missing_payload, packet);
     assert(send_missing.code == SchemaRuntimeCode::mapping_failed);
 
+    // Send failure: schema field constraint violation
+    NamedPayload long_payload = payload;
+    long_payload["device_id"] = FieldValue::from_string("sensor_id_that_is_too_long_for_schema_limit");
+    const SchemaRuntimeResult send_long = runtime.send("SensorData", long_payload, packet);
+    assert(send_long.code == SchemaRuntimeCode::schema_mismatch);
+
     // Receive failure: short packet
     Buffer short_packet;
     short_packet.write(0x01);
@@ -75,6 +90,21 @@ int main()
     unknown_id_packet = encoder.buffer();
     const SchemaRuntimeResult unknown_receive = runtime.receive(unknown_id_packet, decoded_schema_name, decoded_payload);
     assert(unknown_receive.code == SchemaRuntimeCode::schema_not_found);
+
+    // Receive failure: explicit expected schema does not match packet message_id
+    NamedPayload status_payload;
+    status_payload["status"] = FieldValue::from_u8(1);
+    Buffer status_packet;
+    assert(runtime.send("StatusData", status_payload, status_packet).ok());
+    const SchemaRuntimeResult receive_as_wrong_schema =
+        runtime.receive_as("SensorData", status_packet, decoded_payload);
+    assert(receive_as_wrong_schema.code == SchemaRuntimeCode::schema_mismatch);
+
+    NamedPayload receive_as_payload;
+    const SchemaRuntimeResult receive_as_ok =
+        runtime.receive_as("StatusData", status_packet, receive_as_payload);
+    assert(receive_as_ok.ok());
+    assert(receive_as_payload["status"].as_u8 == 1);
 
     // Receive failure: trailing bytes detected before decode consumes fields
     Buffer trailing_packet = packet;
@@ -104,6 +134,20 @@ int main()
     const SchemaRuntimeResult truncated_string_receive =
         runtime.receive(truncated_string_packet, decoded_schema_name, decoded_payload);
     assert(truncated_string_receive.code == SchemaRuntimeCode::corruption_detected);
+
+    // Receive failure: decoded packet violates schema max-length constraint
+    Buffer overlong_string_packet;
+    write_u16(overlong_string_packet, 7);
+    overlong_string_packet.write(32);
+    write_u16(overlong_string_packet, 700);
+    write_u16(overlong_string_packet, 33);
+    for (usize i = 0; i < 33; ++i)
+    {
+        overlong_string_packet.write('x');
+    }
+    const SchemaRuntimeResult overlong_string_receive =
+        runtime.receive(overlong_string_packet, decoded_schema_name, decoded_payload);
+    assert(overlong_string_receive.code == SchemaRuntimeCode::corruption_detected);
 
     const SchemaDef binary_schema {
         "BinaryData",

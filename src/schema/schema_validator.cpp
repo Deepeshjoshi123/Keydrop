@@ -95,6 +95,83 @@ SchemaValidationResult SchemaValidator::validate_payload_field_types(
     return {SchemaValidationCode::ok, "Payload field types are compatible with schema."};
 }
 
+SchemaValidationResult SchemaValidator::validate_message_id(
+    const SchemaDef& schema,
+    u16 message_id
+)
+{
+    if (schema.message_id != message_id)
+    {
+        std::ostringstream oss;
+        oss << "Message ID mismatch. Expected " << schema.message_id
+            << ", got " << message_id << ".";
+        return {SchemaValidationCode::message_id_mismatch, oss.str()};
+    }
+
+    return {SchemaValidationCode::ok, "Message ID matches schema."};
+}
+
+SchemaValidationResult SchemaValidator::validate_payload_values(
+    const SchemaDef& schema,
+    const OrderedPayload& payload
+)
+{
+    if (payload.size() != schema.fields.size())
+    {
+        std::ostringstream oss;
+        oss << "Field count mismatch. Expected " << schema.fields.size()
+            << ", got " << payload.size() << ".";
+        return {SchemaValidationCode::payload_field_count_mismatch, oss.str()};
+    }
+
+    for (usize i = 0; i < schema.fields.size(); ++i)
+    {
+        const FieldDef& field = schema.fields[i];
+        const FieldValue& value = payload[i];
+
+        if (value.type != field.type)
+        {
+            std::ostringstream oss;
+            oss << "Field type mismatch at index " << i
+                << " ('" << field.name << "'). Expected "
+                << field_type_to_string(field.type)
+                << ", got " << field_type_to_string(value.type) << ".";
+            return {SchemaValidationCode::payload_field_type_mismatch, oss.str()};
+        }
+
+        if (!field.constraints.has_max_length)
+        {
+            continue;
+        }
+
+        usize actual_length = 0;
+        bool has_length = true;
+        if (value.type == FieldType::string)
+        {
+            actual_length = value.as_string.size();
+        }
+        else if (value.type == FieldType::bytes)
+        {
+            actual_length = value.as_bytes.size();
+        }
+        else
+        {
+            has_length = false;
+        }
+
+        if (has_length && actual_length > field.constraints.max_length)
+        {
+            std::ostringstream oss;
+            oss << "Field constraint violation for '" << field.name
+                << "'. Max length is " << field.constraints.max_length
+                << ", got " << actual_length << ".";
+            return {SchemaValidationCode::payload_field_constraint_violation, oss.str()};
+        }
+    }
+
+    return {SchemaValidationCode::ok, "Payload values are compatible with schema."};
+}
+
 bool SchemaValidator::is_supported_field_type(FieldType type)
 {
     switch (type)

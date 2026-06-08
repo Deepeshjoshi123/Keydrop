@@ -109,5 +109,43 @@ int main()
     assert(SchemaValidator::validate_payload_field_types(valid_schema, bad_type_payload).code
            == SchemaValidationCode::payload_field_type_mismatch);
 
+    assert(SchemaValidator::validate_message_id(valid_schema, 1).ok());
+    assert(SchemaValidator::validate_message_id(valid_schema, 99).code
+           == SchemaValidationCode::message_id_mismatch);
+
+    OrderedPayload valid_values;
+    valid_values.push_back(FieldValue::from_u8(32));
+    valid_values.push_back(FieldValue::from_u8(70));
+    valid_values.push_back(FieldValue::from_string("sensor_01"));
+    assert(SchemaValidator::validate_payload_values(valid_schema, valid_values).ok());
+
+    OrderedPayload short_values;
+    short_values.push_back(FieldValue::from_u8(32));
+    short_values.push_back(FieldValue::from_u8(70));
+    assert(SchemaValidator::validate_payload_values(valid_schema, short_values).code
+           == SchemaValidationCode::payload_field_count_mismatch);
+
+    OrderedPayload wrong_type_values = valid_values;
+    wrong_type_values[1] = FieldValue::from_u16(70);
+    assert(SchemaValidator::validate_payload_values(valid_schema, wrong_type_values).code
+           == SchemaValidationCode::payload_field_type_mismatch);
+
+    OrderedPayload long_string_values = valid_values;
+    long_string_values[2] = FieldValue::from_string("sensor_name_that_is_too_long_for_schema");
+    assert(SchemaValidator::validate_payload_values(valid_schema, long_string_values).code
+           == SchemaValidationCode::payload_field_constraint_violation);
+
+    const SchemaDef bytes_schema {
+        "BytesData",
+        6,
+        {
+            FieldDef {"raw", FieldType::bytes, 0, FieldConstraints {true, 2}},
+        }
+    };
+    OrderedPayload long_bytes_values;
+    long_bytes_values.push_back(FieldValue::from_bytes({0x01, 0x02, 0x03}));
+    assert(SchemaValidator::validate_payload_values(bytes_schema, long_bytes_values).code
+           == SchemaValidationCode::payload_field_constraint_violation);
+
     return 0;
 }

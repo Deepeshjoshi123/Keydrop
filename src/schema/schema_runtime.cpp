@@ -264,6 +264,13 @@ SchemaRuntimeResult SchemaRuntime::send(
         return {SchemaRuntimeCode::mapping_failed, mapped.message};
     }
 
+    const SchemaValidationResult payload_validation =
+        SchemaValidator::validate_payload_values(*schema, ordered_payload);
+    if (!payload_validation.ok())
+    {
+        return {SchemaRuntimeCode::schema_mismatch, payload_validation.message};
+    }
+
     for (usize i = 0; i < ordered_payload.size(); ++i)
     {
         encode_field_value(encoder, ordered_payload[i], dictionary_, dictionary_.config());
@@ -302,16 +309,72 @@ SchemaRuntimeResult SchemaRuntime::receive(
             return {SchemaRuntimeCode::schema_not_found, "Schema not found for message_id."};
         }
 
+        const SchemaValidationResult message_validation =
+            SchemaValidator::validate_message_id(*schema, message_id);
+        if (!message_validation.ok())
+        {
+            return {SchemaRuntimeCode::schema_mismatch, message_validation.message};
+        }
+
+        return receive_with_schema(*schema, packet, out_schema_name, out_payload);
+    }
+    catch (const std::out_of_range&)
+    {
+        return {SchemaRuntimeCode::decode_failed, "Packet ended before schema decode completed."};
+    }
+}
+
+SchemaRuntimeResult SchemaRuntime::receive_as(
+    const std::string& expected_schema_name,
+    const Buffer& packet,
+    NamedPayload& out_payload
+) const
+{
+    if (packet.size() < 2)
+    {
+        return {SchemaRuntimeCode::packet_too_small, "Packet too small to contain message_id."};
+    }
+
+    const SchemaDef* schema = registry_.find_by_name(expected_schema_name);
+    if (schema == nullptr)
+    {
+        return {SchemaRuntimeCode::schema_not_found, "Schema not found: " + expected_schema_name};
+    }
+
+    const u16 message_id =
+        static_cast<u16>(packet.data()[0])
+        |
+        (static_cast<u16>(packet.data()[1]) << 8);
+    const SchemaValidationResult message_validation =
+        SchemaValidator::validate_message_id(*schema, message_id);
+    if (!message_validation.ok())
+    {
+        return {SchemaRuntimeCode::schema_mismatch, message_validation.message};
+    }
+
+    std::string decoded_schema_name;
+    return receive_with_schema(*schema, packet, decoded_schema_name, out_payload);
+}
+
+SchemaRuntimeResult SchemaRuntime::receive_with_schema(
+    const SchemaDef& schema,
+    const Buffer& packet,
+    std::string& out_schema_name,
+    NamedPayload& out_payload
+) const
+{
+    try
+    {
         Buffer decode_packet;
         const RuntimeOptimizerResult deoptimize_result =
-            RuntimeOptimizer::deoptimize_packet(*schema, packet, decode_packet);
+            RuntimeOptimizer::deoptimize_packet(schema, packet, decode_packet);
         if (!deoptimize_result.ok)
         {
             return {SchemaRuntimeCode::decode_failed, "Runtime deoptimization failed."};
         }
 
         const CorruptionCheckResult corruption_check =
-            CorruptionDetector::check_keydrop_packet(decode_packet, *schema);
+            CorruptionDetector::check_keydrop_packet(decode_packet, schema);
         if (!corruption_check.ok)
         {
             return {SchemaRuntimeCode::corruption_detected, corruption_check.error_message};
@@ -321,38 +384,31 @@ SchemaRuntimeResult SchemaRuntime::receive(
         (void)reader.read_u16();
 
         OrderedPayload ordered;
-        ordered.reserve(schema->fields.size());
-        for (usize i = 0; i < schema->fields.size(); ++i)
+        ordered.reserve(schema.fields.size());
+        for (usize i = 0; i < schema.fields.size(); ++i)
         {
-            ordered.push_back(read_field_value(reader, schema->fields[i].type, dictionary_));
-        }
-
-        std::vector<FieldType> decoded_types;
-        decoded_types.reserve(ordered.size());
-        for (usize i = 0; i < ordered.size(); ++i)
-        {
-            decoded_types.push_back(ordered[i].type);
+            ordered.push_back(read_field_value(reader, schema.fields[i].type, dictionary_));
         }
 
         const SchemaValidationResult payload_validation =
-            SchemaValidator::validate_payload_field_types(*schema, decoded_types);
+            SchemaValidator::validate_payload_values(schema, ordered);
         if (!payload_validation.ok())
         {
-            return {SchemaRuntimeCode::decode_failed, payload_validation.message};
+            return {SchemaRuntimeCode::schema_mismatch, payload_validation.message};
         }
 
-        const FieldMapperResult mapped = FieldMapper::map_ordered_to_named(*schema, ordered, out_payload);
+        const FieldMapperResult mapped = FieldMapper::map_ordered_to_named(schema, ordered, out_payload);
         if (!mapped.ok())
         {
-            return {SchemaRuntimeCode::decode_failed, mapped.message};
+            return {SchemaRuntimeCode::schema_mismatch, mapped.message};
         }
 
         if (!reader.empty())
         {
-            return {SchemaRuntimeCode::trailing_packet_data, "Packet has trailing unread bytes."};
+            return {SchemaRuntimeCode::corruption_detected, "Packet has trailing unread bytes."};
         }
 
-        out_schema_name = schema->schema_name;
+        out_schema_name = schema.schema_name;
         return {SchemaRuntimeCode::ok, "Packet decoded successfully."};
     }
     catch (const std::out_of_range&)

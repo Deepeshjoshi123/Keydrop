@@ -19,6 +19,7 @@ enum class SchemaRuntimeCode {
     ok,
     schema_not_found,
     schema_invalid,
+    schema_mismatch,
     mapping_failed,
     decode_failed,
     corruption_detected,
@@ -52,6 +53,12 @@ public:
     SchemaRuntimeResult receive(
         const Buffer& packet,
         std::string& out_schema_name,
+        NamedPayload& out_payload
+    ) const;
+
+    SchemaRuntimeResult receive_as(
+        const std::string& expected_schema_name,
+        const Buffer& packet,
         NamedPayload& out_payload
     ) const;
 
@@ -99,6 +106,13 @@ private:
     RuntimeOptimizerConfig optimizer_config_;
     mutable AdaptiveDictionary dictionary_;
     mutable StreamOptimizer stream_optimizer_;
+
+    SchemaRuntimeResult receive_with_schema(
+        const SchemaDef& schema,
+        const Buffer& packet,
+        std::string& out_schema_name,
+        NamedPayload& out_payload
+    ) const;
 };
 
 }
