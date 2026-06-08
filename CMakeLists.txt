@@ -31,6 +31,7 @@ target_sources(
         src/core/packet_reader.cpp
         src/core/endian.cpp
         src/reliability/corruption_detector.cpp
+        src/reliability/packet_synchronizer.cpp
         src/schema/schema_types.cpp
         src/schema/schema_registry.cpp
         src/schema/schema_validator.cpp
@@ -261,6 +262,22 @@ add_test(
 )
 
 add_executable(
+    test_packet_synchronizer
+    tests/test_packet_synchronizer.cpp
+)
+
+target_link_libraries(
+    test_packet_synchronizer
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME packet_synchronizer
+    COMMAND test_packet_synchronizer
+)
+
+add_executable(
     stream_optimizer_benchmark
     benchmarks/stream_optimizer_benchmark.cpp
 )
@@ -286,6 +303,7 @@ set_target_properties(
     test_adaptive_dictionary
     test_stream_optimizer
     test_corruption_detector
+    test_packet_synchronizer
     stream_optimizer_benchmark
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib

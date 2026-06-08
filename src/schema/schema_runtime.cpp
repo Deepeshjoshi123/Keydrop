@@ -8,6 +8,7 @@
 #include "keydrop/core/encoder.hpp"
 #include "keydrop/core/packet_reader.hpp"
 #include "keydrop/reliability/corruption_detector.hpp"
+#include "keydrop/reliability/packet_synchronizer.hpp"
 
 namespace keydrop {
 
@@ -582,6 +583,41 @@ SchemaRuntimeResult SchemaRuntime::receive_stream(
     }
 
     return {SchemaRuntimeCode::ok, "Stream packet decoded."};
+}
+
+SchemaRuntimeResult SchemaRuntime::receive_recovered_stream(
+    const Buffer& stream,
+    std::vector<std::pair<std::string, NamedPayload>>& out_messages,
+    usize& out_skipped_bytes
+) const
+{
+    out_messages.clear();
+    out_skipped_bytes = 0;
+
+    std::vector<PacketSyncResult> recovered_packets;
+    if (!PacketSynchronizer::recover_all_packets(stream, registry_, recovered_packets))
+    {
+        return {SchemaRuntimeCode::synchronization_failed, "No recoverable packet found in stream."};
+    }
+
+    for (usize i = 0; i < recovered_packets.size(); ++i)
+    {
+        const PacketSyncResult& recovered = recovered_packets[i];
+        out_skipped_bytes += recovered.skipped_bytes;
+
+        std::string schema_name;
+        NamedPayload payload;
+        const SchemaRuntimeResult receive_result =
+            receive(recovered.packet, schema_name, payload);
+        if (!receive_result.ok())
+        {
+            return receive_result;
+        }
+
+        out_messages.push_back(std::make_pair(schema_name, payload));
+    }
+
+    return {SchemaRuntimeCode::ok, "Recovered synchronized stream packets."};
 }
 
 void SchemaRuntime::set_stream_optimizer_config(const StreamOptimizerConfig& config)

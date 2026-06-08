@@ -23,6 +23,7 @@ enum class SchemaRuntimeCode {
     mapping_failed,
     decode_failed,
     corruption_detected,
+    synchronization_failed,
     packet_too_small,
     trailing_packet_data,
     json_conversion_failed
@@ -89,6 +90,12 @@ public:
     SchemaRuntimeResult receive_stream(
         const Buffer& packet,
         std::vector<std::pair<std::string, NamedPayload>>& out_messages
+    ) const;
+
+    SchemaRuntimeResult receive_recovered_stream(
+        const Buffer& stream,
+        std::vector<std::pair<std::string, NamedPayload>>& out_messages,
+        usize& out_skipped_bytes
     ) const;
 
     const SchemaRegistry& registry() const;

@@ -12,6 +12,14 @@ static void write_u16(Buffer& packet, u16 value)
     packet.write(static_cast<byte>((value >> 8) & 0xFF));
 }
 
+static void append_packet(Buffer& stream, const Buffer& packet)
+{
+    if (!packet.empty())
+    {
+        stream.append(packet.data().data(), packet.size());
+    }
+}
+
 int main()
 {
     SchemaRuntime runtime;
@@ -167,6 +175,44 @@ int main()
     const SchemaRuntimeResult truncated_bytes_receive =
         runtime.receive(truncated_bytes_packet, decoded_schema_name, decoded_payload);
     assert(truncated_bytes_receive.code == SchemaRuntimeCode::corruption_detected);
+
+    // Packet synchronization recovery: skip corrupted bytes and decode valid packets.
+    NamedPayload payload_recovery_a = payload;
+    payload_recovery_a["temperature"] = FieldValue::from_u8(44);
+    Buffer recovery_packet_a;
+    assert(runtime.send("SensorData", payload_recovery_a, recovery_packet_a).ok());
+
+    NamedPayload payload_recovery_b = payload;
+    payload_recovery_b["temperature"] = FieldValue::from_u8(45);
+    Buffer recovery_packet_b;
+    assert(runtime.send("SensorData", payload_recovery_b, recovery_packet_b).ok());
+
+    Buffer recovery_stream;
+    recovery_stream.write(0xAA);
+    recovery_stream.write(0xBB);
+    append_packet(recovery_stream, recovery_packet_a);
+    recovery_stream.write(0x07);
+    recovery_stream.write(0x00);
+    recovery_stream.write(0xFF);
+    append_packet(recovery_stream, recovery_packet_b);
+
+    std::vector<std::pair<std::string, NamedPayload>> recovered_messages;
+    usize skipped_bytes = 0;
+    const SchemaRuntimeResult recovered_stream_result =
+        runtime.receive_recovered_stream(recovery_stream, recovered_messages, skipped_bytes);
+    assert(recovered_stream_result.ok());
+    assert(skipped_bytes == 5);
+    assert(recovered_messages.size() == 2);
+    assert(recovered_messages[0].first == "SensorData");
+    assert(recovered_messages[0].second["temperature"].as_u8 == 44);
+    assert(recovered_messages[1].second["temperature"].as_u8 == 45);
+
+    Buffer unrecoverable_stream;
+    unrecoverable_stream.write(0xAA);
+    unrecoverable_stream.write(0xBB);
+    const SchemaRuntimeResult unrecoverable_result =
+        runtime.receive_recovered_stream(unrecoverable_stream, recovered_messages, skipped_bytes);
+    assert(unrecoverable_result.code == SchemaRuntimeCode::synchronization_failed);
 
     // JSON API success path
     JsonObject json_payload;
