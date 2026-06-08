@@ -41,6 +41,7 @@ target_sources(
         src/schema/adaptive_dictionary.cpp
         src/schema/stream_optimizer.cpp
         src/schema/schema_runtime.cpp
+        src/transport/transport.cpp
 )
 
 # Includes
@@ -278,6 +279,22 @@ add_test(
 )
 
 add_executable(
+    test_transport
+    tests/test_transport.cpp
+)
+
+target_link_libraries(
+    test_transport
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME transport
+    COMMAND test_transport
+)
+
+add_executable(
     stream_optimizer_benchmark
     benchmarks/stream_optimizer_benchmark.cpp
 )
@@ -304,6 +321,7 @@ set_target_properties(
     test_stream_optimizer
     test_corruption_detector
     test_packet_synchronizer
+    test_transport
     stream_optimizer_benchmark
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
