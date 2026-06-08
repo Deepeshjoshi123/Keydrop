@@ -21,6 +21,7 @@ enum class SchemaRuntimeCode {
     schema_invalid,
     mapping_failed,
     decode_failed,
+    corruption_detected,
     packet_too_small,
     trailing_packet_data,
     json_conversion_failed

@@ -7,6 +7,7 @@
 
 #include "keydrop/core/encoder.hpp"
 #include "keydrop/core/packet_reader.hpp"
+#include "keydrop/reliability/corruption_detector.hpp"
 
 namespace keydrop {
 
@@ -307,6 +308,13 @@ SchemaRuntimeResult SchemaRuntime::receive(
         if (!deoptimize_result.ok)
         {
             return {SchemaRuntimeCode::decode_failed, "Runtime deoptimization failed."};
+        }
+
+        const CorruptionCheckResult corruption_check =
+            CorruptionDetector::check_keydrop_packet(decode_packet, *schema);
+        if (!corruption_check.ok)
+        {
+            return {SchemaRuntimeCode::corruption_detected, corruption_check.error_message};
         }
 
         PacketReader reader(decode_packet);

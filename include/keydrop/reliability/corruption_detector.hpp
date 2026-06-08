@@ -6,6 +6,7 @@
 
 #include "keydrop/core/buffer.hpp"
 #include "keydrop/core/types.hpp"
+#include "keydrop/schema/schema_types.hpp"
 
 namespace keydrop {
 
@@ -15,6 +16,8 @@ enum class CorruptionErrorCode {
     truncated_read,
     invalid_field_length,
     bad_header_marker,
+    message_id_mismatch,
+    packet_boundary_mismatch,
     checksum_mismatch
 };
 
@@ -39,6 +42,9 @@ struct CorruptionCheckOptions {
     bool strict_length_match = false;
 
     std::function<bool(const Buffer&)> checksum_validator;
+
+    bool enable_crc32 = false;
+    usize crc32_offset = 0;
 };
 
 class CorruptionDetector {
@@ -47,6 +53,13 @@ public:
         const Buffer& packet,
         const CorruptionCheckOptions& options
     );
+
+    static CorruptionCheckResult check_keydrop_packet(
+        const Buffer& packet,
+        const SchemaDef& schema
+    );
+
+    static u32 crc32(const Buffer& packet);
 };
 
 }

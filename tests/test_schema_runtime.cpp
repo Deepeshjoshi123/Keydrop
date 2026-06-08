@@ -6,6 +6,12 @@
 
 using namespace keydrop;
 
+static void write_u16(Buffer& packet, u16 value)
+{
+    packet.write(static_cast<byte>(value & 0xFF));
+    packet.write(static_cast<byte>((value >> 8) & 0xFF));
+}
+
 int main()
 {
     SchemaRuntime runtime;
@@ -70,11 +76,53 @@ int main()
     const SchemaRuntimeResult unknown_receive = runtime.receive(unknown_id_packet, decoded_schema_name, decoded_payload);
     assert(unknown_receive.code == SchemaRuntimeCode::schema_not_found);
 
-    // Receive failure: trailing bytes
+    // Receive failure: trailing bytes detected before decode consumes fields
     Buffer trailing_packet = packet;
     trailing_packet.write(0xFF);
     const SchemaRuntimeResult trailing_receive = runtime.receive(trailing_packet, decoded_schema_name, decoded_payload);
-    assert(trailing_receive.code == SchemaRuntimeCode::trailing_packet_data);
+    assert(trailing_receive.code == SchemaRuntimeCode::corruption_detected);
+
+    // Receive failure: random byte corruption in a string length prefix
+    Buffer corrupted_length_packet;
+    write_u16(corrupted_length_packet, 7);
+    corrupted_length_packet.write(32);
+    write_u16(corrupted_length_packet, 700);
+    write_u16(corrupted_length_packet, 0xFF00);
+    corrupted_length_packet.write('s');
+    const SchemaRuntimeResult corrupted_length_receive =
+        runtime.receive(corrupted_length_packet, decoded_schema_name, decoded_payload);
+    assert(corrupted_length_receive.code == SchemaRuntimeCode::corruption_detected);
+
+    // Receive failure: truncated string payload
+    Buffer truncated_string_packet;
+    write_u16(truncated_string_packet, 7);
+    truncated_string_packet.write(32);
+    write_u16(truncated_string_packet, 700);
+    write_u16(truncated_string_packet, 3);
+    truncated_string_packet.write('a');
+    truncated_string_packet.write('b');
+    const SchemaRuntimeResult truncated_string_receive =
+        runtime.receive(truncated_string_packet, decoded_schema_name, decoded_payload);
+    assert(truncated_string_receive.code == SchemaRuntimeCode::corruption_detected);
+
+    const SchemaDef binary_schema {
+        "BinaryData",
+        8,
+        {
+            FieldDef {"raw", FieldType::bytes, 0, FieldConstraints {true, 8}},
+        }
+    };
+    assert(runtime.register_schema(binary_schema).ok());
+
+    // Receive failure: truncated bytes payload
+    Buffer truncated_bytes_packet;
+    write_u16(truncated_bytes_packet, 8);
+    write_u16(truncated_bytes_packet, 4);
+    truncated_bytes_packet.write(0x01);
+    truncated_bytes_packet.write(0x02);
+    const SchemaRuntimeResult truncated_bytes_receive =
+        runtime.receive(truncated_bytes_packet, decoded_schema_name, decoded_payload);
+    assert(truncated_bytes_receive.code == SchemaRuntimeCode::corruption_detected);
 
     // JSON API success path
     JsonObject json_payload;
