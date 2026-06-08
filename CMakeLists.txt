@@ -42,6 +42,7 @@ target_sources(
         src/schema/stream_optimizer.cpp
         src/schema/schema_runtime.cpp
         src/transport/transport.cpp
+        src/transport/tcp_adapter.cpp
 )
 
 # Includes
@@ -295,6 +296,28 @@ add_test(
 )
 
 add_executable(
+    test_tcp_adapter
+    tests/test_tcp_adapter.cpp
+)
+
+target_link_libraries(
+    test_tcp_adapter
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME tcp_adapter
+    COMMAND test_tcp_adapter
+)
+
+set_tests_properties(
+    tcp_adapter
+    PROPERTIES
+    SKIP_RETURN_CODE 77
+)
+
+add_executable(
     stream_optimizer_benchmark
     benchmarks/stream_optimizer_benchmark.cpp
 )
@@ -322,6 +345,7 @@ set_target_properties(
     test_corruption_detector
     test_packet_synchronizer
     test_transport
+    test_tcp_adapter
     stream_optimizer_benchmark
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
