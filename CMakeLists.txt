@@ -43,6 +43,9 @@ target_sources(
         src/schema/schema_runtime.cpp
         src/transport/transport.cpp
         src/transport/tcp_adapter.cpp
+        src/transport/websocket_adapter.cpp
+        src/transport/transport_config.cpp
+        src/transport/transport_scheduler.cpp
 )
 
 # Includes
@@ -318,6 +321,44 @@ set_tests_properties(
 )
 
 add_executable(
+    test_websocket_adapter
+    tests/test_websocket_adapter.cpp
+)
+
+target_link_libraries(
+    test_websocket_adapter
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME websocket_adapter
+    COMMAND test_websocket_adapter
+)
+
+set_tests_properties(
+    websocket_adapter
+    PROPERTIES
+    SKIP_RETURN_CODE 77
+)
+
+add_executable(
+    test_transport_scheduler
+    tests/test_transport_scheduler.cpp
+)
+
+target_link_libraries(
+    test_transport_scheduler
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME transport_scheduler
+    COMMAND test_transport_scheduler
+)
+
+add_executable(
     stream_optimizer_benchmark
     benchmarks/stream_optimizer_benchmark.cpp
 )
@@ -346,6 +387,8 @@ set_target_properties(
     test_packet_synchronizer
     test_transport
     test_tcp_adapter
+    test_websocket_adapter
+    test_transport_scheduler
     stream_optimizer_benchmark
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
