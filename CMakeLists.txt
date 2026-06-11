@@ -26,6 +26,7 @@ target_sources(
     keydrop
     PRIVATE
         src/benchmark/benchmark_core.cpp
+        src/benchmark/format_benchmark.cpp
         src/core/buffer.cpp
         src/core/encoder.cpp
         src/core/packet_builder.cpp
@@ -376,6 +377,22 @@ add_test(
 )
 
 add_executable(
+    test_format_benchmark
+    tests/test_format_benchmark.cpp
+)
+
+target_link_libraries(
+    test_format_benchmark
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME format_benchmark
+    COMMAND test_format_benchmark
+)
+
+add_executable(
     stream_optimizer_benchmark
     benchmarks/stream_optimizer_benchmark.cpp
 )
@@ -407,6 +424,7 @@ set_target_properties(
     test_websocket_adapter
     test_transport_scheduler
     test_benchmark_core
+    test_format_benchmark
     stream_optimizer_benchmark
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
