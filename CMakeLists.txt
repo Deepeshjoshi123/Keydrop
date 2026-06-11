@@ -25,6 +25,7 @@ add_library(
 target_sources(
     keydrop
     PRIVATE
+        src/benchmark/benchmark_core.cpp
         src/core/buffer.cpp
         src/core/encoder.cpp
         src/core/packet_builder.cpp
@@ -359,6 +360,22 @@ add_test(
 )
 
 add_executable(
+    test_benchmark_core
+    tests/test_benchmark_core.cpp
+)
+
+target_link_libraries(
+    test_benchmark_core
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME benchmark_core
+    COMMAND test_benchmark_core
+)
+
+add_executable(
     stream_optimizer_benchmark
     benchmarks/stream_optimizer_benchmark.cpp
 )
@@ -389,6 +406,7 @@ set_target_properties(
     test_tcp_adapter
     test_websocket_adapter
     test_transport_scheduler
+    test_benchmark_core
     stream_optimizer_benchmark
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
