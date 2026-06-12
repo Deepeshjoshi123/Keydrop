@@ -27,6 +27,7 @@ target_sources(
     PRIVATE
         src/benchmark/benchmark_core.cpp
         src/benchmark/format_benchmark.cpp
+        src/benchmark/benchmark_report.cpp
         src/core/buffer.cpp
         src/core/encoder.cpp
         src/core/packet_builder.cpp
@@ -393,6 +394,38 @@ add_test(
 )
 
 add_executable(
+    test_benchmark_report
+    tests/test_benchmark_report.cpp
+)
+
+target_link_libraries(
+    test_benchmark_report
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME benchmark_report
+    COMMAND test_benchmark_report
+)
+
+add_executable(
+    benchmark_runner
+    benchmarks/benchmark_runner.cpp
+)
+
+target_link_libraries(
+    benchmark_runner
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME benchmark_runner
+    COMMAND benchmark_runner 4 ${PROJECT_BINARY_DIR}/benchmark_report.txt
+)
+
+add_executable(
     stream_optimizer_benchmark
     benchmarks/stream_optimizer_benchmark.cpp
 )
@@ -425,6 +458,8 @@ set_target_properties(
     test_transport_scheduler
     test_benchmark_core
     test_format_benchmark
+    test_benchmark_report
+    benchmark_runner
     stream_optimizer_benchmark
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
