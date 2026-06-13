@@ -3,7 +3,6 @@
 #include <cerrno>
 #include <cstring>
 #include <string>
-#include <vector>
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -297,14 +296,12 @@ TransportReceiveResult TcpAdapter::receive()
     Buffer packet;
     if (packet_size != 0)
     {
-        std::vector<byte> bytes(packet_size, 0);
-        if (!read_all(fd, bytes.data(), packet_size))
+        packet.resize(packet_size);
+        if (!read_all(fd, packet.mutable_bytes(), packet_size))
         {
             state_ = ConnectionState::failed;
             return {TransportStatusCode::receive_failed, errno_message("receive packet failed"), {}};
         }
-
-        packet.append(bytes.data(), bytes.size());
     }
 
     return {TransportStatusCode::ok, "TCP packet received.", packet};

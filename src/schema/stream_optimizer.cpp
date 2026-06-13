@@ -215,7 +215,7 @@ Buffer StreamOptimizer::build_batch_packet(const std::deque<Buffer>& packets)
         const u16 len = static_cast<u16>(packets[i].size());
         out.write(static_cast<byte>(len & 0xFF));
         out.write(static_cast<byte>((len >> 8) & 0xFF));
-        out.append(packets[i].data().data(), packets[i].size());
+        out.append(packets[i]);
     }
     return out;
 }

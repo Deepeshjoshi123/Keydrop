@@ -287,7 +287,7 @@ bool PacketSynchronizer::recover_all_packets(
 
         Buffer next_remaining;
         const usize next_offset = recovered.skipped_bytes + recovered.packet.size();
-        next_remaining.append(&data[next_offset], data.size() - next_offset);
+        next_remaining.append(remaining.slice(next_offset, data.size() - next_offset));
         remaining = next_remaining;
     }
 

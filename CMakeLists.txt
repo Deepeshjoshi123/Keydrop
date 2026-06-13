@@ -94,6 +94,22 @@ target_link_libraries(
 enable_testing()
 
 add_executable(
+    test_buffer
+    tests/test_buffer.cpp
+)
+
+target_link_libraries(
+    test_buffer
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME buffer
+    COMMAND test_buffer
+)
+
+add_executable(
     test_packet_reader
     tests/test_packet_reader.cpp
 )
@@ -440,6 +456,7 @@ target_link_libraries(
 set_target_properties(
     keydrop
     basic_encoding
+    test_buffer
     test_packet_reader
     test_encoder
     test_schema_types

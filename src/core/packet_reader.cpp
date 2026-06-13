@@ -19,7 +19,7 @@ u8 PacketReader::read_u8()
         throw std::out_of_range("PacketReader read_u8 out of range");
     }
 
-    const u8 value = buffer_.read(cursor_);
+    const u8 value = buffer_.bytes()[cursor_];
     ++cursor_;
     return value;
 }
@@ -32,8 +32,9 @@ u16 PacketReader::read_u16()
     }
 
     u16 little = 0;
-    little |= static_cast<u16>(buffer_.read(cursor_));
-    little |= static_cast<u16>(buffer_.read(cursor_ + 1)) << 8;
+    const byte* data = buffer_.bytes();
+    little |= static_cast<u16>(data[cursor_]);
+    little |= static_cast<u16>(data[cursor_ + 1]) << 8;
     cursor_ += 2;
     return from_little_endian(little);
 }
@@ -46,10 +47,11 @@ u32 PacketReader::read_u32()
     }
 
     u32 little = 0;
-    little |= static_cast<u32>(buffer_.read(cursor_));
-    little |= static_cast<u32>(buffer_.read(cursor_ + 1)) << 8;
-    little |= static_cast<u32>(buffer_.read(cursor_ + 2)) << 16;
-    little |= static_cast<u32>(buffer_.read(cursor_ + 3)) << 24;
+    const byte* data = buffer_.bytes();
+    little |= static_cast<u32>(data[cursor_]);
+    little |= static_cast<u32>(data[cursor_ + 1]) << 8;
+    little |= static_cast<u32>(data[cursor_ + 2]) << 16;
+    little |= static_cast<u32>(data[cursor_ + 3]) << 24;
     cursor_ += 4;
     return from_little_endian(little);
 }
@@ -62,14 +64,15 @@ u64 PacketReader::read_u64()
     }
 
     u64 little = 0;
-    little |= static_cast<u64>(buffer_.read(cursor_));
-    little |= static_cast<u64>(buffer_.read(cursor_ + 1)) << 8;
-    little |= static_cast<u64>(buffer_.read(cursor_ + 2)) << 16;
-    little |= static_cast<u64>(buffer_.read(cursor_ + 3)) << 24;
-    little |= static_cast<u64>(buffer_.read(cursor_ + 4)) << 32;
-    little |= static_cast<u64>(buffer_.read(cursor_ + 5)) << 40;
-    little |= static_cast<u64>(buffer_.read(cursor_ + 6)) << 48;
-    little |= static_cast<u64>(buffer_.read(cursor_ + 7)) << 56;
+    const byte* data = buffer_.bytes();
+    little |= static_cast<u64>(data[cursor_]);
+    little |= static_cast<u64>(data[cursor_ + 1]) << 8;
+    little |= static_cast<u64>(data[cursor_ + 2]) << 16;
+    little |= static_cast<u64>(data[cursor_ + 3]) << 24;
+    little |= static_cast<u64>(data[cursor_ + 4]) << 32;
+    little |= static_cast<u64>(data[cursor_ + 5]) << 40;
+    little |= static_cast<u64>(data[cursor_ + 6]) << 48;
+    little |= static_cast<u64>(data[cursor_ + 7]) << 56;
     cursor_ += 8;
     return from_little_endian(little);
 }
