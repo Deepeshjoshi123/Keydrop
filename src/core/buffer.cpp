@@ -118,6 +118,11 @@ usize Buffer::size() const
     return bytes_.size();
 }
 
+usize Buffer::capacity() const
+{
+    return bytes_.capacity();
+}
+
 bool Buffer::empty() const
 {
     return bytes_.empty();

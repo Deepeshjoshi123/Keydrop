@@ -5,9 +5,11 @@
 #include <vector>
 
 #include "keydrop/core/buffer.hpp"
+#include "keydrop/core/buffer_pool.hpp"
 #include "keydrop/schema/field_mapper.hpp"
 #include "keydrop/schema/json_types.hpp"
 #include "keydrop/schema/adaptive_dictionary.hpp"
+#include "keydrop/schema/payload_pool.hpp"
 #include "keydrop/schema/runtime_optimizer.hpp"
 #include "keydrop/schema/schema_registry.hpp"
 #include "keydrop/schema/schema_validator.hpp"
@@ -107,12 +109,19 @@ public:
     void set_stream_optimizer_config(const StreamOptimizerConfig& config);
     const StreamOptimizerConfig& stream_optimizer_config() const;
     void reset_stream_optimizer();
+    void set_buffer_pool_config(const BufferPoolConfig& config);
+    const BufferPoolConfig& buffer_pool_config() const;
+    void set_payload_pool_config(const PayloadPoolConfig& config);
+    const PayloadPoolConfig& payload_pool_config() const;
+    void reset_memory_pools();
 
 private:
     SchemaRegistry registry_;
     RuntimeOptimizerConfig optimizer_config_;
     mutable AdaptiveDictionary dictionary_;
     mutable StreamOptimizer stream_optimizer_;
+    mutable BufferPool buffer_pool_;
+    mutable PayloadPool payload_pool_;
 
     SchemaRuntimeResult receive_with_schema(
         const SchemaDef& schema,

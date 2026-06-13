@@ -29,6 +29,7 @@ target_sources(
         src/benchmark/format_benchmark.cpp
         src/benchmark/benchmark_report.cpp
         src/core/buffer.cpp
+        src/core/buffer_pool.cpp
         src/core/encoder.cpp
         src/core/packet_builder.cpp
         src/core/packet_reader.cpp
@@ -42,6 +43,7 @@ target_sources(
         src/schema/json_types.cpp
         src/schema/runtime_optimizer.cpp
         src/schema/adaptive_dictionary.cpp
+        src/schema/payload_pool.cpp
         src/schema/stream_optimizer.cpp
         src/schema/schema_runtime.cpp
         src/transport/transport.cpp
@@ -107,6 +109,22 @@ target_link_libraries(
 add_test(
     NAME buffer
     COMMAND test_buffer
+)
+
+add_executable(
+    test_buffer_pool
+    tests/test_buffer_pool.cpp
+)
+
+target_link_libraries(
+    test_buffer_pool
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME buffer_pool
+    COMMAND test_buffer_pool
 )
 
 add_executable(
@@ -203,6 +221,22 @@ target_link_libraries(
 add_test(
     NAME field_mapper
     COMMAND test_field_mapper
+)
+
+add_executable(
+    test_payload_pool
+    tests/test_payload_pool.cpp
+)
+
+target_link_libraries(
+    test_payload_pool
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME payload_pool
+    COMMAND test_payload_pool
 )
 
 add_executable(
@@ -457,12 +491,14 @@ set_target_properties(
     keydrop
     basic_encoding
     test_buffer
+    test_buffer_pool
     test_packet_reader
     test_encoder
     test_schema_types
     test_schema_registry
     test_schema_validator
     test_field_mapper
+    test_payload_pool
     test_schema_runtime
     test_runtime_optimizer
     test_adaptive_dictionary

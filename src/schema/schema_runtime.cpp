@@ -258,7 +258,9 @@ SchemaRuntimeResult SchemaRuntime::send(
     Encoder encoder;
     encoder.write_u16(schema->message_id);
 
-    OrderedPayload ordered_payload;
+    OrderedPayloadLease ordered_payload_lease =
+        payload_pool_.lease_ordered(schema->fields.size());
+    OrderedPayload& ordered_payload = ordered_payload_lease.get();
     const FieldMapperResult mapped = FieldMapper::map_named_to_ordered(*schema, payload, ordered_payload);
     if (!mapped.ok())
     {
@@ -278,7 +280,8 @@ SchemaRuntimeResult SchemaRuntime::send(
     }
 
     Buffer encoded_packet = encoder.buffer();
-    Buffer optimized_packet;
+    BufferLease optimized_packet_lease = buffer_pool_.lease();
+    Buffer& optimized_packet = optimized_packet_lease.get();
     const RuntimeOptimizerResult optimize_result =
         RuntimeOptimizer::optimize_packet(*schema, encoded_packet, optimized_packet, optimizer_config_);
     if (!optimize_result.ok)
@@ -366,7 +369,8 @@ SchemaRuntimeResult SchemaRuntime::receive_with_schema(
 {
     try
     {
-        Buffer decode_packet;
+        BufferLease decode_packet_lease = buffer_pool_.lease();
+        Buffer& decode_packet = decode_packet_lease.get();
         const RuntimeOptimizerResult deoptimize_result =
             RuntimeOptimizer::deoptimize_packet(schema, packet, decode_packet);
         if (!deoptimize_result.ok)
@@ -384,7 +388,9 @@ SchemaRuntimeResult SchemaRuntime::receive_with_schema(
         PacketReader reader(decode_packet);
         (void)reader.read_u16();
 
-        OrderedPayload ordered;
+        OrderedPayloadLease ordered_lease =
+            payload_pool_.lease_ordered(schema.fields.size());
+        OrderedPayload& ordered = ordered_lease.get();
         ordered.reserve(schema.fields.size());
         for (usize i = 0; i < schema.fields.size(); ++i)
         {
@@ -460,7 +466,9 @@ SchemaRuntimeResult SchemaRuntime::send_json(
         return {SchemaRuntimeCode::schema_not_found, "Schema not found: " + schema_name};
     }
 
-    NamedPayload payload;
+    NamedPayloadLease payload_lease =
+        payload_pool_.lease_named(schema->fields.size());
+    NamedPayload& payload = payload_lease.get();
     for (usize i = 0; i < schema->fields.size(); ++i)
     {
         const FieldDef& field = schema->fields[i];
@@ -506,7 +514,8 @@ SchemaRuntimeResult SchemaRuntime::receive_json(
     JsonObject& out_json_payload
 ) const
 {
-    NamedPayload payload;
+    NamedPayloadLease payload_lease = payload_pool_.lease_named(0);
+    NamedPayload& payload = payload_lease.get();
     const SchemaRuntimeResult receive_result = receive(packet, out_schema_name, payload);
     if (!receive_result.ok())
     {
@@ -571,7 +580,8 @@ SchemaRuntimeResult SchemaRuntime::receive_stream(
     while (!packets.empty())
     {
         std::string schema_name;
-        NamedPayload payload;
+        NamedPayloadLease payload_lease = payload_pool_.lease_named(0);
+        NamedPayload& payload = payload_lease.get();
         const SchemaRuntimeResult result = receive(packets.front(), schema_name, payload);
         if (!result.ok())
         {
@@ -606,7 +616,8 @@ SchemaRuntimeResult SchemaRuntime::receive_recovered_stream(
         out_skipped_bytes += recovered.skipped_bytes;
 
         std::string schema_name;
-        NamedPayload payload;
+        NamedPayloadLease payload_lease = payload_pool_.lease_named(0);
+        NamedPayload& payload = payload_lease.get();
         const SchemaRuntimeResult receive_result =
             receive(recovered.packet, schema_name, payload);
         if (!receive_result.ok())
@@ -633,6 +644,32 @@ const StreamOptimizerConfig& SchemaRuntime::stream_optimizer_config() const
 void SchemaRuntime::reset_stream_optimizer()
 {
     stream_optimizer_.reset();
+}
+
+void SchemaRuntime::set_buffer_pool_config(const BufferPoolConfig& config)
+{
+    buffer_pool_.configure(config);
+}
+
+const BufferPoolConfig& SchemaRuntime::buffer_pool_config() const
+{
+    return buffer_pool_.config();
+}
+
+void SchemaRuntime::set_payload_pool_config(const PayloadPoolConfig& config)
+{
+    payload_pool_.configure(config);
+}
+
+const PayloadPoolConfig& SchemaRuntime::payload_pool_config() const
+{
+    return payload_pool_.config();
+}
+
+void SchemaRuntime::reset_memory_pools()
+{
+    buffer_pool_.reset();
+    payload_pool_.reset();
 }
 
 }

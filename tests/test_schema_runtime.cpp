@@ -37,6 +37,21 @@ int main()
     const SchemaRegistryStatus reg_status = runtime.register_schema(sensor_schema);
     assert(reg_status.ok());
 
+    BufferPoolConfig buffer_pool_config;
+    buffer_pool_config.initial_buffers = 2;
+    buffer_pool_config.default_capacity = 32;
+    buffer_pool_config.max_available = 4;
+    runtime.set_buffer_pool_config(buffer_pool_config);
+    assert(runtime.buffer_pool_config().default_capacity == 32);
+
+    PayloadPoolConfig payload_pool_config;
+    payload_pool_config.initial_ordered_payloads = 2;
+    payload_pool_config.initial_named_payloads = 2;
+    payload_pool_config.default_field_capacity = 4;
+    payload_pool_config.max_available = 4;
+    runtime.set_payload_pool_config(payload_pool_config);
+    assert(runtime.payload_pool_config().default_field_capacity == 4);
+
     const SchemaDef status_schema {
         "StatusData",
         9,

@@ -55,6 +55,9 @@ public:
     // Current size
     usize size() const;
 
+    // Current reserved capacity
+    usize capacity() const;
+
     // Empty check
     bool empty() const;
 
