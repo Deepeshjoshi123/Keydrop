@@ -41,6 +41,7 @@ target_sources(
         src/schema/schema_validator.cpp
         src/schema/field_mapper.cpp
         src/schema/json_types.cpp
+        src/schema/packet_layout.cpp
         src/schema/runtime_optimizer.cpp
         src/schema/adaptive_dictionary.cpp
         src/schema/payload_pool.cpp
@@ -173,6 +174,22 @@ target_link_libraries(
 add_test(
     NAME schema_types
     COMMAND test_schema_types
+)
+
+add_executable(
+    test_packet_layout
+    tests/test_packet_layout.cpp
+)
+
+target_link_libraries(
+    test_packet_layout
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME packet_layout
+    COMMAND test_packet_layout
 )
 
 add_executable(
@@ -495,6 +512,7 @@ set_target_properties(
     test_packet_reader
     test_encoder
     test_schema_types
+    test_packet_layout
     test_schema_registry
     test_schema_validator
     test_field_mapper

@@ -6,6 +6,7 @@
 
 #include "keydrop/core/buffer.hpp"
 #include "keydrop/core/types.hpp"
+#include "keydrop/schema/packet_layout.hpp"
 #include "keydrop/schema/schema_types.hpp"
 
 namespace keydrop {
@@ -57,6 +58,11 @@ public:
     static CorruptionCheckResult check_keydrop_packet(
         const Buffer& packet,
         const SchemaDef& schema
+    );
+
+    static CorruptionCheckResult check_keydrop_packet(
+        const Buffer& packet,
+        const PacketLayout& layout
     );
 
     static u32 crc32(const Buffer& packet);

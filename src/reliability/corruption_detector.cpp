@@ -229,6 +229,14 @@ CorruptionCheckResult CorruptionDetector::check_keydrop_packet(
     const SchemaDef& schema
 )
 {
+    return check_keydrop_packet(packet, build_packet_layout(schema));
+}
+
+CorruptionCheckResult CorruptionDetector::check_keydrop_packet(
+    const Buffer& packet,
+    const PacketLayout& layout
+)
+{
     if (packet.size() < 2)
     {
         return fail(
@@ -242,7 +250,7 @@ CorruptionCheckResult CorruptionDetector::check_keydrop_packet(
         static_cast<u16>(packet.data()[0])
         |
         (static_cast<u16>(packet.data()[1]) << 8);
-    if (message_id != schema.message_id)
+    if (message_id != layout.message_id)
     {
         return fail(
             CorruptionErrorCode::message_id_mismatch,
@@ -251,15 +259,37 @@ CorruptionCheckResult CorruptionDetector::check_keydrop_packet(
         );
     }
 
-    usize cursor = 2;
-    for (usize i = 0; i < schema.fields.size(); ++i)
+    if (layout.fixed_size_only)
     {
-        const FieldDef& field = schema.fields[i];
-
-        usize fixed_size = 0;
-        if (try_field_type_fixed_size(field.type, fixed_size))
+        if (packet.size() < layout.fixed_packet_size)
         {
-            if (cursor + fixed_size > packet.size())
+            return fail(
+                CorruptionErrorCode::truncated_read,
+                "Fixed-size packet is smaller than schema layout",
+                packet.size()
+            );
+        }
+
+        if (packet.size() != layout.fixed_packet_size)
+        {
+            return fail(
+                CorruptionErrorCode::packet_boundary_mismatch,
+                "Fixed-size packet does not match schema layout",
+                layout.fixed_packet_size
+            );
+        }
+
+        return CorruptionCheckResult{};
+    }
+
+    usize cursor = 2;
+    for (usize i = 0; i < layout.fields.size(); ++i)
+    {
+        const FieldLayout& field = layout.fields[i];
+
+        if (!field.variable_length)
+        {
+            if (cursor + field.fixed_size > packet.size())
             {
                 return fail(
                     CorruptionErrorCode::truncated_read,
@@ -268,7 +298,7 @@ CorruptionCheckResult CorruptionDetector::check_keydrop_packet(
                 );
             }
 
-            cursor += fixed_size;
+            cursor += field.fixed_size;
             continue;
         }
 
@@ -307,9 +337,9 @@ CorruptionCheckResult CorruptionDetector::check_keydrop_packet(
         }
 
         if (
-            field.constraints.has_max_length
+            field.has_max_length
             &&
-            declared_size > field.constraints.max_length
+            declared_size > field.max_length
         )
         {
             return fail(

@@ -249,6 +249,12 @@ SchemaRuntimeResult SchemaRuntime::send(
         return {SchemaRuntimeCode::schema_not_found, "Schema not found: " + schema_name};
     }
 
+    const PacketLayout* layout = registry_.find_layout_by_name(schema_name);
+    if (layout == nullptr)
+    {
+        return {SchemaRuntimeCode::schema_invalid, "Packet layout not found for schema."};
+    }
+
     const SchemaValidationResult validation = SchemaValidator::validate_schema(*schema, &registry_);
     if (!validation.ok())
     {
@@ -274,9 +280,15 @@ SchemaRuntimeResult SchemaRuntime::send(
         return {SchemaRuntimeCode::schema_mismatch, payload_validation.message};
     }
 
-    for (usize i = 0; i < ordered_payload.size(); ++i)
+    for (usize i = 0; i < layout->fields.size(); ++i)
     {
-        encode_field_value(encoder, ordered_payload[i], dictionary_, dictionary_.config());
+        const usize value_index = layout->fields[i].schema_index;
+        encode_field_value(
+            encoder,
+            ordered_payload[value_index],
+            dictionary_,
+            dictionary_.config()
+        );
     }
 
     Buffer encoded_packet = encoder.buffer();
@@ -378,8 +390,18 @@ SchemaRuntimeResult SchemaRuntime::receive_with_schema(
             return {SchemaRuntimeCode::decode_failed, "Runtime deoptimization failed."};
         }
 
+        const PacketLayout* layout =
+            registry_.find_layout_by_message_id(schema.message_id);
+        if (layout == nullptr)
+        {
+            return {SchemaRuntimeCode::schema_invalid, "Packet layout not found for schema."};
+        }
+
         const CorruptionCheckResult corruption_check =
-            CorruptionDetector::check_keydrop_packet(decode_packet, schema);
+            CorruptionDetector::check_keydrop_packet(
+                decode_packet,
+                *layout
+            );
         if (!corruption_check.ok)
         {
             return {SchemaRuntimeCode::corruption_detected, corruption_check.error_message};
@@ -389,12 +411,14 @@ SchemaRuntimeResult SchemaRuntime::receive_with_schema(
         (void)reader.read_u16();
 
         OrderedPayloadLease ordered_lease =
-            payload_pool_.lease_ordered(schema.fields.size());
+            payload_pool_.lease_ordered(layout->fields.size());
         OrderedPayload& ordered = ordered_lease.get();
-        ordered.reserve(schema.fields.size());
-        for (usize i = 0; i < schema.fields.size(); ++i)
+        ordered.reserve(layout->fields.size());
+        for (usize i = 0; i < layout->fields.size(); ++i)
         {
-            ordered.push_back(read_field_value(reader, schema.fields[i].type, dictionary_));
+            ordered.push_back(
+                read_field_value(reader, layout->fields[i].type, dictionary_)
+            );
         }
 
         const SchemaValidationResult payload_validation =

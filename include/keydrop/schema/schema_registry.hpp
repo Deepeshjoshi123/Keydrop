@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "keydrop/schema/packet_layout.hpp"
 #include "keydrop/schema/schema_types.hpp"
 
 namespace keydrop {
@@ -32,6 +33,8 @@ public:
 
     const SchemaDef* find_by_name(const std::string& schema_name) const;
     const SchemaDef* find_by_message_id(u16 message_id) const;
+    const PacketLayout* find_layout_by_name(const std::string& schema_name) const;
+    const PacketLayout* find_layout_by_message_id(u16 message_id) const;
 
     usize size() const;
     void clear();
@@ -39,6 +42,7 @@ public:
 private:
     std::unordered_map<std::string, SchemaDef> schemas_by_name_;
     std::unordered_map<u16, std::string> name_by_message_id_;
+    std::unordered_map<std::string, PacketLayout> layouts_by_name_;
 };
 
 }

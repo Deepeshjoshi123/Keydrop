@@ -26,7 +26,7 @@ u16 read_u16_le(const std::vector<byte>& data, usize offset)
 }
 
 bool measure_variable_field(
-    const FieldDef& field,
+    const FieldLayout& field,
     const std::vector<byte>& data,
     usize& cursor
 )
@@ -54,9 +54,9 @@ bool measure_variable_field(
     }
 
     if (
-        field.constraints.has_max_length
+        field.has_max_length
         &&
-        declared_size > field.constraints.max_length
+        declared_size > field.max_length
     )
     {
         return false;
@@ -72,7 +72,7 @@ bool measure_variable_field(
 }
 
 bool measure_unoptimized_packet(
-    const SchemaDef& schema,
+    const PacketLayout& layout,
     const std::vector<byte>& data,
     usize offset,
     usize& out_length
@@ -83,19 +83,28 @@ bool measure_unoptimized_packet(
         return false;
     }
 
-    usize cursor = offset + 2;
-    for (usize i = 0; i < schema.fields.size(); ++i)
+    if (layout.fixed_size_only)
     {
-        const FieldDef& field = schema.fields[i];
-
-        usize fixed_size = 0;
-        if (try_field_type_fixed_size(field.type, fixed_size))
+        if (offset + layout.fixed_packet_size > data.size())
         {
-            if (cursor + fixed_size > data.size())
+            return false;
+        }
+        out_length = layout.fixed_packet_size;
+        return true;
+    }
+
+    usize cursor = offset + 2;
+    for (usize i = 0; i < layout.fields.size(); ++i)
+    {
+        const FieldLayout& field = layout.fields[i];
+
+        if (!field.variable_length)
+        {
+            if (cursor + field.fixed_size > data.size())
             {
                 return false;
             }
-            cursor += fixed_size;
+            cursor += field.fixed_size;
             continue;
         }
 
@@ -110,7 +119,7 @@ bool measure_unoptimized_packet(
 }
 
 bool measure_optimized_packet(
-    const SchemaDef& schema,
+    const PacketLayout& layout,
     const std::vector<byte>& data,
     usize offset,
     usize& out_length
@@ -122,7 +131,7 @@ bool measure_optimized_packet(
     }
 
     const usize bitmap_size = data[offset + 3];
-    const usize expected_bitmap_size = (schema.fields.size() + 7) / 8;
+    const usize expected_bitmap_size = (layout.fields.size() + 7) / 8;
     if (bitmap_size != expected_bitmap_size)
     {
         return false;
@@ -135,23 +144,22 @@ bool measure_optimized_packet(
     }
 
     usize cursor = bitmap_offset + bitmap_size;
-    for (usize i = 0; i < schema.fields.size(); ++i)
+    for (usize i = 0; i < layout.fields.size(); ++i)
     {
-        const FieldDef& field = schema.fields[i];
+        const FieldLayout& field = layout.fields[i];
 
-        usize fixed_size = 0;
-        if (try_field_type_fixed_size(field.type, fixed_size))
+        if (!field.variable_length)
         {
             if (is_bit_set(data, bitmap_offset, i))
             {
                 continue;
             }
 
-            if (cursor + fixed_size > data.size())
+            if (cursor + field.fixed_size > data.size())
             {
                 return false;
             }
-            cursor += fixed_size;
+            cursor += field.fixed_size;
             continue;
         }
 
@@ -177,6 +185,7 @@ Buffer slice_buffer(const std::vector<byte>& data, usize offset, usize length)
 
 bool candidate_is_valid(
     const SchemaDef& schema,
+    const PacketLayout& layout,
     const Buffer& candidate
 )
 {
@@ -189,7 +198,7 @@ bool candidate_is_valid(
     }
 
     const CorruptionCheckResult corruption_check =
-        CorruptionDetector::check_keydrop_packet(validation_packet, schema);
+        CorruptionDetector::check_keydrop_packet(validation_packet, layout);
     return corruption_check.ok;
 }
 
@@ -213,7 +222,8 @@ PacketSyncResult PacketSynchronizer::recover_next_packet(
     {
         const u16 message_id = read_u16_le(data, offset);
         const SchemaDef* schema = registry.find_by_message_id(message_id);
-        if (schema == nullptr)
+        const PacketLayout* layout = registry.find_layout_by_message_id(message_id);
+        if (schema == nullptr || layout == nullptr)
         {
             continue;
         }
@@ -222,11 +232,11 @@ PacketSyncResult PacketSynchronizer::recover_next_packet(
         bool measured = false;
         if (offset + 3 <= data.size() && data[offset + 2] == kOptimizedMarker)
         {
-            measured = measure_optimized_packet(*schema, data, offset, packet_length);
+            measured = measure_optimized_packet(*layout, data, offset, packet_length);
         }
         else
         {
-            measured = measure_unoptimized_packet(*schema, data, offset, packet_length);
+            measured = measure_unoptimized_packet(*layout, data, offset, packet_length);
         }
 
         if (!measured)
@@ -235,7 +245,7 @@ PacketSyncResult PacketSynchronizer::recover_next_packet(
         }
 
         Buffer candidate = slice_buffer(data, offset, packet_length);
-        if (!candidate_is_valid(*schema, candidate))
+        if (!candidate_is_valid(*schema, *layout, candidate))
         {
             continue;
         }
