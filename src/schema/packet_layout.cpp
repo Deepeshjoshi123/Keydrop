@@ -2,6 +2,29 @@
 
 namespace keydrop {
 
+namespace {
+
+FieldCodec codec_for_type(FieldType type)
+{
+    switch (type)
+    {
+    case FieldType::u8: return FieldCodec::u8_value;
+    case FieldType::u16: return FieldCodec::u16_value;
+    case FieldType::u32: return FieldCodec::u32_value;
+    case FieldType::i8: return FieldCodec::i8_value;
+    case FieldType::i16: return FieldCodec::i16_value;
+    case FieldType::i32: return FieldCodec::i32_value;
+    case FieldType::f32: return FieldCodec::f32_value;
+    case FieldType::f64: return FieldCodec::f64_value;
+    case FieldType::string: return FieldCodec::string_value;
+    case FieldType::bytes: return FieldCodec::bytes_value;
+    }
+
+    return FieldCodec::u8_value;
+}
+
+} // namespace
+
 PacketLayout build_packet_layout(const SchemaDef& schema)
 {
     PacketLayout layout;
@@ -16,6 +39,7 @@ PacketLayout build_packet_layout(const SchemaDef& schema)
 
         FieldLayout field_layout;
         field_layout.type = field.type;
+        field_layout.codec = codec_for_type(field.type);
         field_layout.schema_index = i;
         field_layout.byte_offset = cursor;
         field_layout.dynamic_offset = dynamic_offset;

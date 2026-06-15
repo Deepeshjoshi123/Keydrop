@@ -1,5 +1,6 @@
 #include "keydrop/schema/schema_runtime.hpp"
 
+#include <array>
 #include <limits>
 #include <deque>
 #include <stdexcept>
@@ -15,51 +16,182 @@ namespace keydrop {
 namespace {
 constexpr u16 kDictionaryStringReferenceMarker = 0xFFFF;
 
-FieldValue read_field_value(PacketReader& reader, FieldType type, AdaptiveDictionary& dictionary)
+using DecodeFieldFn = FieldValue (*)(PacketReader&, AdaptiveDictionary&);
+using EncodeFieldFn = void (*)(
+    Encoder&,
+    const FieldValue&,
+    AdaptiveDictionary&,
+    const AdaptiveDictionaryConfig&
+);
+
+FieldValue decode_u8(PacketReader& reader, AdaptiveDictionary&)
 {
-    switch (type)
-    {
-    case FieldType::u8: return FieldValue::from_u8(reader.read_u8());
-    case FieldType::u16: return FieldValue::from_u16(reader.read_u16());
-    case FieldType::u32: return FieldValue::from_u32(reader.read_u32());
-    case FieldType::i8: return FieldValue::from_i8(reader.read_i8());
-    case FieldType::i16: return FieldValue::from_i16(reader.read_i16());
-    case FieldType::i32: return FieldValue::from_i32(reader.read_i32());
-    case FieldType::f32: return FieldValue::from_f32(reader.read_f32());
-    case FieldType::f64: return FieldValue::from_f64(reader.read_f64());
-    case FieldType::string:
-    {
-        const u16 marker_or_size = reader.read_u16();
-        if (marker_or_size == kDictionaryStringReferenceMarker)
-        {
-            const u16 id = reader.read_u16();
-            const AdaptiveDictionaryResult looked = dictionary.lookup_value(id);
-            if (!looked.ok())
-            {
-                throw std::out_of_range("Dictionary ID lookup miss");
-            }
-            return FieldValue::from_string(looked.value);
-        }
-
-        std::string decoded;
-        decoded.reserve(marker_or_size);
-        for (u16 i = 0; i < marker_or_size; ++i)
-        {
-            decoded.push_back(static_cast<char>(reader.read_u8()));
-        }
-
-        (void)dictionary.create_or_get(decoded);
-        return FieldValue::from_string(decoded);
-    }
-    case FieldType::bytes:
-    {
-        const u16 size = reader.read_u16();
-        return FieldValue::from_bytes(reader.read_bytes(size));
-    }
-    }
-
-    return FieldValue::from_u8(0);
+    return FieldValue::from_u8(reader.read_u8());
 }
+
+FieldValue decode_u16(PacketReader& reader, AdaptiveDictionary&)
+{
+    return FieldValue::from_u16(reader.read_u16());
+}
+
+FieldValue decode_u32(PacketReader& reader, AdaptiveDictionary&)
+{
+    return FieldValue::from_u32(reader.read_u32());
+}
+
+FieldValue decode_i8(PacketReader& reader, AdaptiveDictionary&)
+{
+    return FieldValue::from_i8(reader.read_i8());
+}
+
+FieldValue decode_i16(PacketReader& reader, AdaptiveDictionary&)
+{
+    return FieldValue::from_i16(reader.read_i16());
+}
+
+FieldValue decode_i32(PacketReader& reader, AdaptiveDictionary&)
+{
+    return FieldValue::from_i32(reader.read_i32());
+}
+
+FieldValue decode_f32(PacketReader& reader, AdaptiveDictionary&)
+{
+    return FieldValue::from_f32(reader.read_f32());
+}
+
+FieldValue decode_f64(PacketReader& reader, AdaptiveDictionary&)
+{
+    return FieldValue::from_f64(reader.read_f64());
+}
+
+FieldValue decode_string(PacketReader& reader, AdaptiveDictionary& dictionary)
+{
+    const u16 marker_or_size = reader.read_u16();
+    if (marker_or_size == kDictionaryStringReferenceMarker)
+    {
+        const u16 id = reader.read_u16();
+        const AdaptiveDictionaryResult looked = dictionary.lookup_value(id);
+        if (!looked.ok())
+        {
+            throw std::out_of_range("Dictionary ID lookup miss");
+        }
+        return FieldValue::from_string(looked.value);
+    }
+
+    std::string decoded;
+    decoded.reserve(marker_or_size);
+    for (u16 i = 0; i < marker_or_size; ++i)
+    {
+        decoded.push_back(static_cast<char>(reader.read_u8()));
+    }
+
+    (void)dictionary.create_or_get(decoded);
+    return FieldValue::from_string(decoded);
+}
+
+FieldValue decode_bytes(PacketReader& reader, AdaptiveDictionary&)
+{
+    const u16 size = reader.read_u16();
+    return FieldValue::from_bytes(reader.read_bytes(size));
+}
+
+void encode_u8(Encoder& encoder, const FieldValue& value, AdaptiveDictionary&, const AdaptiveDictionaryConfig&)
+{
+    encoder.write_u8(value.as_u8);
+}
+
+void encode_u16(Encoder& encoder, const FieldValue& value, AdaptiveDictionary&, const AdaptiveDictionaryConfig&)
+{
+    encoder.write_u16(value.as_u16);
+}
+
+void encode_u32(Encoder& encoder, const FieldValue& value, AdaptiveDictionary&, const AdaptiveDictionaryConfig&)
+{
+    encoder.write_u32(value.as_u32);
+}
+
+void encode_i8(Encoder& encoder, const FieldValue& value, AdaptiveDictionary&, const AdaptiveDictionaryConfig&)
+{
+    encoder.write_i8(value.as_i8);
+}
+
+void encode_i16(Encoder& encoder, const FieldValue& value, AdaptiveDictionary&, const AdaptiveDictionaryConfig&)
+{
+    encoder.write_i16(value.as_i16);
+}
+
+void encode_i32(Encoder& encoder, const FieldValue& value, AdaptiveDictionary&, const AdaptiveDictionaryConfig&)
+{
+    encoder.write_i32(value.as_i32);
+}
+
+void encode_f32(Encoder& encoder, const FieldValue& value, AdaptiveDictionary&, const AdaptiveDictionaryConfig&)
+{
+    encoder.write_f32(value.as_f32);
+}
+
+void encode_f64(Encoder& encoder, const FieldValue& value, AdaptiveDictionary&, const AdaptiveDictionaryConfig&)
+{
+    encoder.write_f64(value.as_f64);
+}
+
+void encode_bytes(Encoder& encoder, const FieldValue& value, AdaptiveDictionary&, const AdaptiveDictionaryConfig&)
+{
+    encoder.write_u16(static_cast<u16>(value.as_bytes.size()));
+    if (!value.as_bytes.empty())
+    {
+        encoder.write_bytes(value.as_bytes.data(), value.as_bytes.size());
+    }
+}
+
+void encode_string(
+    Encoder& encoder,
+    const FieldValue& value,
+    AdaptiveDictionary& dictionary,
+    const AdaptiveDictionaryConfig& dictionary_config
+)
+{
+    if (dictionary_config.enabled && dictionary_config.enable_string_values)
+    {
+        const AdaptiveDictionaryResult lookup = dictionary.lookup_id(value.as_string);
+        if (lookup.ok())
+        {
+            encoder.write_u16(kDictionaryStringReferenceMarker);
+            encoder.write_u16(lookup.id);
+            return;
+        }
+
+        (void)dictionary.create_or_get(value.as_string);
+    }
+
+    encoder.write_string(value.as_string);
+}
+
+const std::array<DecodeFieldFn, static_cast<usize>(FieldCodec::count)> kDecodeField = {{
+    decode_u8,
+    decode_u16,
+    decode_u32,
+    decode_i8,
+    decode_i16,
+    decode_i32,
+    decode_f32,
+    decode_f64,
+    decode_string,
+    decode_bytes,
+}};
+
+const std::array<EncodeFieldFn, static_cast<usize>(FieldCodec::count)> kEncodeField = {{
+    encode_u8,
+    encode_u16,
+    encode_u32,
+    encode_i8,
+    encode_i16,
+    encode_i32,
+    encode_f32,
+    encode_f64,
+    encode_string,
+    encode_bytes,
+}};
 
 bool json_value_to_field_value(
     const JsonValue& json_value,
@@ -179,51 +311,6 @@ JsonValue field_value_to_json_value(const FieldValue& field_value)
     return JsonValue::from_integer(0);
 }
 
-void encode_field_value(
-    Encoder& encoder,
-    const FieldValue& value,
-    AdaptiveDictionary& dictionary,
-    const AdaptiveDictionaryConfig& dictionary_config
-)
-{
-    switch (value.type)
-    {
-    case FieldType::u8: encoder.write_u8(value.as_u8); return;
-    case FieldType::u16: encoder.write_u16(value.as_u16); return;
-    case FieldType::u32: encoder.write_u32(value.as_u32); return;
-    case FieldType::i8: encoder.write_i8(value.as_i8); return;
-    case FieldType::i16: encoder.write_i16(value.as_i16); return;
-    case FieldType::i32: encoder.write_i32(value.as_i32); return;
-    case FieldType::f32: encoder.write_f32(value.as_f32); return;
-    case FieldType::f64: encoder.write_f64(value.as_f64); return;
-    case FieldType::bytes:
-        encoder.write_u16(static_cast<u16>(value.as_bytes.size()));
-        if (!value.as_bytes.empty())
-        {
-            encoder.write_bytes(value.as_bytes.data(), value.as_bytes.size());
-        }
-        return;
-    case FieldType::string:
-    {
-        if (dictionary_config.enabled && dictionary_config.enable_string_values)
-        {
-            const AdaptiveDictionaryResult lookup = dictionary.lookup_id(value.as_string);
-            if (lookup.ok())
-            {
-                encoder.write_u16(kDictionaryStringReferenceMarker);
-                encoder.write_u16(lookup.id);
-                return;
-            }
-
-            (void)dictionary.create_or_get(value.as_string);
-        }
-
-        encoder.write_string(value.as_string);
-        return;
-    }
-    }
-}
-
 } // namespace
 
 SchemaRegistryStatus SchemaRuntime::register_schema(const SchemaDef& schema)
@@ -282,8 +369,9 @@ SchemaRuntimeResult SchemaRuntime::send(
 
     for (usize i = 0; i < layout->fields.size(); ++i)
     {
-        const usize value_index = layout->fields[i].schema_index;
-        encode_field_value(
+        const FieldLayout& field_layout = layout->fields[i];
+        const usize value_index = field_layout.schema_index;
+        kEncodeField[static_cast<usize>(field_layout.codec)](
             encoder,
             ordered_payload[value_index],
             dictionary_,
@@ -417,7 +505,10 @@ SchemaRuntimeResult SchemaRuntime::receive_with_schema(
         for (usize i = 0; i < layout->fields.size(); ++i)
         {
             ordered.push_back(
-                read_field_value(reader, layout->fields[i].type, dictionary_)
+                kDecodeField[static_cast<usize>(layout->fields[i].codec)](
+                    reader,
+                    dictionary_
+                )
             );
         }
 

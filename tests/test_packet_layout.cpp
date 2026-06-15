@@ -26,8 +26,11 @@ int main()
     assert(fixed.minimum_packet_size == 15);
     assert(fixed.fixed_packet_size == 15);
     assert(fixed.fields[0].byte_offset == 2);
+    assert(fixed.fields[0].codec == FieldCodec::u8_value);
     assert(fixed.fields[1].byte_offset == 3);
+    assert(fixed.fields[1].codec == FieldCodec::u32_value);
     assert(fixed.fields[2].byte_offset == 7);
+    assert(fixed.fields[2].codec == FieldCodec::f64_value);
     assert(!fixed.fields[2].dynamic_offset);
 
     const SchemaDef mixed_schema {
@@ -50,10 +53,13 @@ int main()
     assert(mixed.fields[0].byte_offset == 2);
     assert(!mixed.fields[0].dynamic_offset);
     assert(mixed.fields[1].variable_length);
+    assert(mixed.fields[1].codec == FieldCodec::string_value);
     assert(mixed.fields[1].has_max_length);
     assert(mixed.fields[1].max_length == 32);
     assert(mixed.fields[2].dynamic_offset);
+    assert(mixed.fields[2].codec == FieldCodec::u8_value);
     assert(mixed.fields[3].dynamic_offset);
+    assert(mixed.fields[3].codec == FieldCodec::bytes_value);
 
     SchemaRegistry registry;
     assert(registry.register_schema(mixed_schema).ok());

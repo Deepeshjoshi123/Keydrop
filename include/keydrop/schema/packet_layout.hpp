@@ -6,8 +6,23 @@
 
 namespace keydrop {
 
+enum class FieldCodec : u8 {
+    u8_value = 0,
+    u16_value,
+    u32_value,
+    i8_value,
+    i16_value,
+    i32_value,
+    f32_value,
+    f64_value,
+    string_value,
+    bytes_value,
+    count
+};
+
 struct FieldLayout {
     FieldType type = FieldType::u8;
+    FieldCodec codec = FieldCodec::u8_value;
     usize schema_index = 0;
     usize fixed_size = 0;
     usize byte_offset = 0;
