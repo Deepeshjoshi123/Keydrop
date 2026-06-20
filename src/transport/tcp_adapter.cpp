@@ -1,13 +1,27 @@
 #include "keydrop/transport/tcp_adapter.hpp"
 
-#include <cerrno>
+#include "keydrop/platform/socket.hpp"
+
+#include <climits>
 #include <cstring>
 #include <string>
+
+#ifdef _WIN32
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
+#else
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
+#endif
 
 namespace keydrop {
 
@@ -15,28 +29,79 @@ namespace {
 
 constexpr int kBacklog = 1;
 
-TransportResult fail_result(
-    TransportStatusCode code,
-    const std::string& message
-)
+#ifdef _WIN32
+using NativeSocket = SOCKET;
+using SocketLength = int;
+using SocketIoResult = int;
+
+NativeSocket to_native_socket(std::uintptr_t socket)
+{
+    return static_cast<NativeSocket>(socket);
+}
+
+std::uintptr_t from_native_socket(NativeSocket socket)
+{
+    return static_cast<std::uintptr_t>(socket);
+}
+
+bool is_invalid_socket(NativeSocket socket)
+{
+    return socket == INVALID_SOCKET;
+}
+
+void close_native_socket(NativeSocket socket)
+{
+    (void)::closesocket(socket);
+}
+#else
+using NativeSocket = int;
+using SocketLength = socklen_t;
+using SocketIoResult = ssize_t;
+
+NativeSocket to_native_socket(std::uintptr_t socket)
+{
+    return static_cast<NativeSocket>(socket);
+}
+
+std::uintptr_t from_native_socket(NativeSocket socket)
+{
+    return static_cast<std::uintptr_t>(socket);
+}
+
+bool is_invalid_socket(NativeSocket socket)
+{
+    return socket < 0;
+}
+
+void close_native_socket(NativeSocket socket)
+{
+    (void)::close(socket);
+}
+#endif
+
+TransportResult fail_result(TransportStatusCode code, const std::string& message)
 {
     return {code, message, 0};
 }
 
-std::string errno_message(const char* prefix)
+std::string socket_error_message(const char* prefix)
 {
-    return std::string(prefix) + ": " + std::strerror(errno);
+    return std::string(prefix) + ": " + platform::last_socket_error();
 }
 
-bool write_all(int socket_fd, const byte* data, usize size)
+bool write_all(NativeSocket socket, const byte* data, usize size)
 {
     usize sent = 0;
     while (sent < size)
     {
-        const ssize_t written = ::send(
-            socket_fd,
-            data + sent,
-            size - sent,
+        const usize remaining = size - sent;
+        const int chunk_size = static_cast<int>(remaining > static_cast<usize>(INT_MAX)
+            ? INT_MAX
+            : remaining);
+        const SocketIoResult written = ::send(
+            socket,
+            reinterpret_cast<const char*>(data + sent),
+            chunk_size,
             0
         );
         if (written <= 0)
@@ -49,15 +114,19 @@ bool write_all(int socket_fd, const byte* data, usize size)
     return true;
 }
 
-bool read_all(int socket_fd, byte* data, usize size)
+bool read_all(NativeSocket socket, byte* data, usize size)
 {
     usize received = 0;
     while (received < size)
     {
-        const ssize_t read_count = ::recv(
-            socket_fd,
-            data + received,
-            size - received,
+        const usize remaining = size - received;
+        const int chunk_size = static_cast<int>(remaining > static_cast<usize>(INT_MAX)
+            ? INT_MAX
+            : remaining);
+        const SocketIoResult read_count = ::recv(
+            socket,
+            reinterpret_cast<char*>(data + received),
+            chunk_size,
             0
         );
         if (read_count <= 0)
@@ -86,15 +155,19 @@ u32 read_u32_le(const byte* data)
         | (static_cast<u32>(data[3]) << 24);
 }
 
-bool fill_address(
-    const TransportEndpoint& endpoint,
-    sockaddr_in& out_address
-)
+bool fill_address(const TransportEndpoint& endpoint, sockaddr_in& out_address)
 {
     std::memset(&out_address, 0, sizeof(out_address));
     out_address.sin_family = AF_INET;
     out_address.sin_port = htons(endpoint.port);
-    return ::inet_pton(AF_INET, endpoint.host.c_str(), &out_address.sin_addr) == 1;
+    const unsigned long parsed_address = ::inet_addr(endpoint.host.c_str());
+    if (parsed_address == INADDR_NONE)
+    {
+        return false;
+    }
+
+    out_address.sin_addr.s_addr = parsed_address;
+    return true;
 }
 
 } // namespace
@@ -127,6 +200,13 @@ TransportResult TcpAdapter::connect(const TransportEndpoint& endpoint)
         return fail_result(TransportStatusCode::already_connected, "TCP adapter is already connected.");
     }
 
+    std::string initialization_error;
+    if (!platform::ensure_socket_subsystem(initialization_error))
+    {
+        state_ = ConnectionState::failed;
+        return fail_result(TransportStatusCode::connect_failed, initialization_error);
+    }
+
     sockaddr_in address;
     if (!fill_address(endpoint, address))
     {
@@ -134,23 +214,23 @@ TransportResult TcpAdapter::connect(const TransportEndpoint& endpoint)
         return fail_result(TransportStatusCode::invalid_endpoint, "TCP host must be an IPv4 address.");
     }
 
-    int fd = ::socket(AF_INET, SOCK_STREAM, 0);
-    if (fd < 0)
+    const NativeSocket socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (is_invalid_socket(socket))
     {
         state_ = ConnectionState::failed;
-        return fail_result(TransportStatusCode::connect_failed, errno_message("socket failed"));
+        return fail_result(TransportStatusCode::connect_failed, socket_error_message("socket failed"));
     }
 
     state_ = ConnectionState::connecting;
-    if (::connect(fd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != 0)
+    if (::connect(socket, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != 0)
     {
-        ::close(fd);
+        close_native_socket(socket);
         state_ = ConnectionState::failed;
-        return fail_result(TransportStatusCode::connect_failed, errno_message("connect failed"));
+        return fail_result(TransportStatusCode::connect_failed, socket_error_message("connect failed"));
     }
 
-    socket_fd_ = fd;
-    peer_fd_ = -1;
+    socket_fd_ = from_native_socket(socket);
+    peer_fd_ = platform::kInvalidSocket;
     local_port_ = endpoint.port;
     state_ = ConnectionState::connected;
     return {TransportStatusCode::ok, "TCP connection established.", 0};
@@ -169,6 +249,13 @@ TransportResult TcpAdapter::listen(const TransportEndpoint& endpoint)
         return fail_result(TransportStatusCode::already_connected, "TCP adapter is already active.");
     }
 
+    std::string initialization_error;
+    if (!platform::ensure_socket_subsystem(initialization_error))
+    {
+        state_ = ConnectionState::failed;
+        return fail_result(TransportStatusCode::listen_failed, initialization_error);
+    }
+
     sockaddr_in address;
     if (!fill_address(endpoint, address))
     {
@@ -176,33 +263,39 @@ TransportResult TcpAdapter::listen(const TransportEndpoint& endpoint)
         return fail_result(TransportStatusCode::invalid_endpoint, "TCP host must be an IPv4 address.");
     }
 
-    int fd = ::socket(AF_INET, SOCK_STREAM, 0);
-    if (fd < 0)
+    const NativeSocket socket = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (is_invalid_socket(socket))
     {
         state_ = ConnectionState::failed;
-        return fail_result(TransportStatusCode::listen_failed, errno_message("socket failed"));
+        return fail_result(TransportStatusCode::listen_failed, socket_error_message("socket failed"));
     }
 
     int enabled = 1;
-    (void)::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &enabled, sizeof(enabled));
+    (void)::setsockopt(
+        socket,
+        SOL_SOCKET,
+        SO_REUSEADDR,
+        reinterpret_cast<const char*>(&enabled),
+        sizeof(enabled)
+    );
 
-    if (::bind(fd, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != 0)
+    if (::bind(socket, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != 0)
     {
-        ::close(fd);
+        close_native_socket(socket);
         state_ = ConnectionState::failed;
-        return fail_result(TransportStatusCode::bind_failed, errno_message("bind failed"));
+        return fail_result(TransportStatusCode::bind_failed, socket_error_message("bind failed"));
     }
 
-    if (::listen(fd, kBacklog) != 0)
+    if (::listen(socket, kBacklog) != 0)
     {
-        ::close(fd);
+        close_native_socket(socket);
         state_ = ConnectionState::failed;
-        return fail_result(TransportStatusCode::listen_failed, errno_message("listen failed"));
+        return fail_result(TransportStatusCode::listen_failed, socket_error_message("listen failed"));
     }
 
-    sockaddr_in bound_address;
-    socklen_t bound_size = sizeof(bound_address);
-    if (::getsockname(fd, reinterpret_cast<sockaddr*>(&bound_address), &bound_size) == 0)
+    sockaddr_in bound_address{};
+    SocketLength bound_size = sizeof(bound_address);
+    if (::getsockname(socket, reinterpret_cast<sockaddr*>(&bound_address), &bound_size) == 0)
     {
         local_port_ = ntohs(bound_address.sin_port);
     }
@@ -211,28 +304,28 @@ TransportResult TcpAdapter::listen(const TransportEndpoint& endpoint)
         local_port_ = endpoint.port;
     }
 
-    socket_fd_ = fd;
-    peer_fd_ = -1;
+    socket_fd_ = from_native_socket(socket);
+    peer_fd_ = platform::kInvalidSocket;
     state_ = ConnectionState::listening;
     return {TransportStatusCode::ok, "TCP listener started.", 0};
 }
 
 TransportResult TcpAdapter::accept_connection()
 {
-    if (state_ != ConnectionState::listening || socket_fd_ < 0)
+    if (state_ != ConnectionState::listening || socket_fd_ == platform::kInvalidSocket)
     {
         return fail_result(TransportStatusCode::not_connected, "TCP adapter is not listening.");
     }
 
-    const int accepted_fd = ::accept(socket_fd_, nullptr, nullptr);
-    if (accepted_fd < 0)
+    const NativeSocket accepted_socket = ::accept(to_native_socket(socket_fd_), nullptr, nullptr);
+    if (is_invalid_socket(accepted_socket))
     {
         state_ = ConnectionState::failed;
-        return fail_result(TransportStatusCode::connect_failed, errno_message("accept failed"));
+        return fail_result(TransportStatusCode::connect_failed, socket_error_message("accept failed"));
     }
 
     close_socket(peer_fd_);
-    peer_fd_ = accepted_fd;
+    peer_fd_ = from_native_socket(accepted_socket);
     state_ = ConnectionState::connected;
     return {TransportStatusCode::ok, "TCP client accepted.", 0};
 }
@@ -249,8 +342,8 @@ TransportResult TcpAdapter::close()
 
 TransportResult TcpAdapter::send(const Buffer& packet)
 {
-    const int fd = active_socket();
-    if (fd < 0 || state_ != ConnectionState::connected)
+    const std::uintptr_t socket_handle = active_socket();
+    if (socket_handle == platform::kInvalidSocket || state_ != ConnectionState::connected)
     {
         return fail_result(TransportStatusCode::not_connected, "TCP adapter is not connected.");
     }
@@ -260,18 +353,19 @@ TransportResult TcpAdapter::send(const Buffer& packet)
         return fail_result(TransportStatusCode::send_failed, "TCP packet is too large.");
     }
 
+    const NativeSocket socket = to_native_socket(socket_handle);
     byte header[4] = {};
     write_u32_le(header, static_cast<u32>(packet.size()));
-    if (!write_all(fd, header, sizeof(header)))
+    if (!write_all(socket, header, sizeof(header)))
     {
         state_ = ConnectionState::failed;
-        return fail_result(TransportStatusCode::send_failed, errno_message("send header failed"));
+        return fail_result(TransportStatusCode::send_failed, socket_error_message("send header failed"));
     }
 
-    if (!packet.empty() && !write_all(fd, packet.data().data(), packet.size()))
+    if (!packet.empty() && !write_all(socket, packet.data().data(), packet.size()))
     {
         state_ = ConnectionState::failed;
-        return fail_result(TransportStatusCode::send_failed, errno_message("send packet failed"));
+        return fail_result(TransportStatusCode::send_failed, socket_error_message("send packet failed"));
     }
 
     return {TransportStatusCode::ok, "TCP packet sent.", packet.size()};
@@ -279,17 +373,18 @@ TransportResult TcpAdapter::send(const Buffer& packet)
 
 TransportReceiveResult TcpAdapter::receive()
 {
-    const int fd = active_socket();
-    if (fd < 0 || state_ != ConnectionState::connected)
+    const std::uintptr_t socket_handle = active_socket();
+    if (socket_handle == platform::kInvalidSocket || state_ != ConnectionState::connected)
     {
         return {TransportStatusCode::not_connected, "TCP adapter is not connected.", {}};
     }
 
+    const NativeSocket socket = to_native_socket(socket_handle);
     byte header[4] = {};
-    if (!read_all(fd, header, sizeof(header)))
+    if (!read_all(socket, header, sizeof(header)))
     {
         state_ = ConnectionState::failed;
-        return {TransportStatusCode::receive_failed, errno_message("receive header failed"), {}};
+        return {TransportStatusCode::receive_failed, socket_error_message("receive header failed"), {}};
     }
 
     const u32 packet_size = read_u32_le(header);
@@ -297,10 +392,10 @@ TransportReceiveResult TcpAdapter::receive()
     if (packet_size != 0)
     {
         packet.resize(packet_size);
-        if (!read_all(fd, packet.mutable_bytes(), packet_size))
+        if (!read_all(socket, packet.mutable_bytes(), packet_size))
         {
             state_ = ConnectionState::failed;
-            return {TransportStatusCode::receive_failed, errno_message("receive packet failed"), {}};
+            return {TransportStatusCode::receive_failed, socket_error_message("receive packet failed"), {}};
         }
     }
 
@@ -312,22 +407,18 @@ u16 TcpAdapter::local_port() const
     return local_port_;
 }
 
-int TcpAdapter::active_socket() const
+std::uintptr_t TcpAdapter::active_socket() const
 {
-    if (peer_fd_ >= 0)
-    {
-        return peer_fd_;
-    }
-    return socket_fd_;
+    return peer_fd_ != platform::kInvalidSocket ? peer_fd_ : socket_fd_;
 }
 
-void TcpAdapter::close_socket(int& socket_fd)
+void TcpAdapter::close_socket(std::uintptr_t& socket_handle)
 {
-    if (socket_fd >= 0)
+    if (socket_handle != platform::kInvalidSocket)
     {
-        ::close(socket_fd);
-        socket_fd = -1;
+        close_native_socket(to_native_socket(socket_handle));
+        socket_handle = platform::kInvalidSocket;
     }
 }
 
-}
+} // namespace keydrop

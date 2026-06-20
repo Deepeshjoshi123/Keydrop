@@ -35,7 +35,7 @@ int main()
     assert(report.find("keydrop") != std::string::npos);
     assert(report.find("json") != std::string::npos);
 
-    const std::string path = "/tmp/keydrop_benchmark_report_test.txt";
+    const std::string path = "keydrop_benchmark_report_test.txt";
     assert(save_benchmark_report(path, report));
 
     std::ifstream saved(path.c_str());
@@ -44,7 +44,7 @@ int main()
     std::getline(saved, saved_content);
     assert(saved_content == "Keydrop Benchmark Results");
 
-    assert(!save_benchmark_report("/tmp", report));
+    assert(!save_benchmark_report("", report));
 
     return 0;
 }

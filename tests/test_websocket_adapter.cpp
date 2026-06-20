@@ -1,9 +1,8 @@
 #include <cassert>
 #include <string>
-#include <thread>
-
 #include "keydrop/transport/transport_scheduler.hpp"
 #include "keydrop/transport/websocket_adapter.hpp"
+#include "test_thread.hpp"
 
 using namespace keydrop;
 
@@ -51,7 +50,7 @@ int main()
     assert(server.local_port() != 0);
 
     bool server_done = false;
-    std::thread server_thread([&server, &server_done]() {
+    TestThread server_thread([&server, &server_done]() {
         const TransportResult accept_result = server.accept_connection();
         assert(accept_result.ok());
 

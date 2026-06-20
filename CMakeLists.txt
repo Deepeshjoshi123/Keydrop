@@ -7,6 +7,8 @@ project(
     LANGUAGES CXX
 )
 
+find_package(Threads REQUIRED)
+
 # TEMPORARY: GCC 6.3 compatibility
 # Later migrate to C++20
 set(CMAKE_CXX_STANDARD 17)
@@ -28,6 +30,7 @@ target_sources(
         src/benchmark/benchmark_core.cpp
         src/benchmark/format_benchmark.cpp
         src/benchmark/benchmark_report.cpp
+        src/platform/socket.cpp
         src/core/buffer.cpp
         src/core/buffer_pool.cpp
         src/core/encoder.cpp
@@ -60,6 +63,13 @@ target_include_directories(
     PUBLIC
         ${PROJECT_SOURCE_DIR}/include
 )
+
+# Static-library consumers must receive the platform system libraries too.
+target_link_libraries(keydrop PUBLIC Threads::Threads)
+
+if(WIN32)
+    target_link_libraries(keydrop PUBLIC ws2_32)
+endif()
 
 # Warnings
 if(MSVC)

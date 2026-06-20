@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include "keydrop/transport/transport.hpp"
 
 namespace keydrop {
@@ -26,11 +28,11 @@ public:
     u16 local_port() const;
 
 private:
-    int active_socket() const;
-    void close_socket(int& socket_fd);
+    std::uintptr_t active_socket() const;
+    void close_socket(std::uintptr_t& socket_fd);
 
-    int socket_fd_ = -1;
-    int peer_fd_ = -1;
+    std::uintptr_t socket_fd_ = static_cast<std::uintptr_t>(-1);
+    std::uintptr_t peer_fd_ = static_cast<std::uintptr_t>(-1);
     u16 local_port_ = 0;
     ConnectionState state_ = ConnectionState::disconnected;
 };
