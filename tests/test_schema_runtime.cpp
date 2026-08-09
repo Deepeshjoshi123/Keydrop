@@ -74,6 +74,16 @@ int main()
     PacketReader header_reader(packet);
     assert(header_reader.read_u16() == 7);
 
+    OrderedPayload ordered_payload;
+    ordered_payload.push_back(FieldValue::from_u8(32));
+    ordered_payload.push_back(FieldValue::from_u16(700));
+    ordered_payload.push_back(FieldValue::from_string("sensor_01"));
+    Buffer ordered_packet;
+    const SchemaRuntimeResult send_ordered_result =
+        runtime.send_ordered("SensorData", ordered_payload, ordered_packet);
+    assert(send_ordered_result.ok());
+    assert(ordered_packet.data() == packet.data());
+
     std::string decoded_schema_name;
     NamedPayload decoded_payload;
     const SchemaRuntimeResult receive_result = runtime.receive(packet, decoded_schema_name, decoded_payload);

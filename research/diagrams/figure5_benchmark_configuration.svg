@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+<defs>
+  <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+    <path d="M0,0 L0,6 L9,3 z" fill="#1F2933"/>
+  </marker>
+</defs>
+<rect width="100%" height="100%" fill="white"/>
+
+<text x="600" y="34" text-anchor="middle" font-family="Arial" font-size="22" font-weight="700">Figure 5. Benchmark Configuration</text>
+
+<rect x="380" y="58" width="320" height="68" rx="6" fill="#EEF6FF" stroke="#1F2933" stroke-width="1.5"/>
+<text x="540" y="87" text-anchor="middle" font-family="Arial" font-size="15" font-weight="700">Structured Telemetry Payload</text>
+<text x="540" y="108" text-anchor="middle" font-family="Arial" font-size="13">(BenchmarkPayload, shared input)</text>
+
+<line x1="540" y1="126" x2="540" y2="158" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<rect x="405" y="158" width="270" height="58" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/>
+<text x="540" y="181" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700">Benchmark Payload Setup</text>
+<text x="540" y="201" text-anchor="middle" font-family="Arial" font-size="12">default_benchmark_payload()</text>
+
+<text x="540" y="248" text-anchor="middle" font-family="Arial" font-size="13" fill="#276FBF" font-weight="700">Identical payload sent to each implemented format path</text>
+<line x1="540" y1="216" x2="540" y2="230" stroke="#1F2933" stroke-width="1.5"/>
+<line x1="150" y1="230" x2="850" y2="230" stroke="#1F2933" stroke-width="1.5"/>
+<line x1="150" y1="230" x2="150" y2="266" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="370" y1="230" x2="370" y2="266" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="590" y1="230" x2="590" y2="266" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="850" y1="230" x2="850" y2="266" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<rect x="70" y="266" width="160" height="52" rx="6" fill="#EEF6FF" stroke="#1F2933" stroke-width="1.5"/>
+<text x="150" y="298" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700">JSON</text>
+<line x1="150" y1="318" x2="150" y2="348" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="70" y="348" width="160" height="52" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/>
+<text x="150" y="380" text-anchor="middle" font-family="Arial" font-size="14">Serialization</text>
+<line x1="150" y1="400" x2="150" y2="430" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="70" y="430" width="160" height="52" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/>
+<text x="150" y="462" text-anchor="middle" font-family="Arial" font-size="14">Measurement</text>
+
+<rect x="290" y="266" width="160" height="52" rx="6" fill="#EEF6FF" stroke="#1F2933" stroke-width="1.5"/>
+<text x="370" y="298" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700">Protocol Buffers</text>
+<line x1="370" y1="318" x2="370" y2="348" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="290" y="348" width="160" height="52" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/>
+<text x="370" y="380" text-anchor="middle" font-family="Arial" font-size="14">Serialization</text>
+<line x1="370" y1="400" x2="370" y2="430" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="290" y="430" width="160" height="52" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/>
+<text x="370" y="462" text-anchor="middle" font-family="Arial" font-size="14">Measurement</text>
+
+<rect x="510" y="266" width="160" height="52" rx="6" fill="#EEF6FF" stroke="#1F2933" stroke-width="1.5"/>
+<text x="590" y="298" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700">MessagePack</text>
+<line x1="590" y1="318" x2="590" y2="348" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="510" y="348" width="160" height="52" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/>
+<text x="590" y="380" text-anchor="middle" font-family="Arial" font-size="14">Serialization</text>
+<line x1="590" y1="400" x2="590" y2="430" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="510" y="430" width="160" height="52" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/>
+<text x="590" y="462" text-anchor="middle" font-family="Arial" font-size="14">Measurement</text>
+
+<rect x="770" y="266" width="160" height="46" rx="6" fill="#EEF6FF" stroke="#1F2933" stroke-width="1.5"/>
+<text x="850" y="294" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700">Keydrop</text>
+<line x1="850" y1="312" x2="850" y2="336" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="770" y="336" width="160" height="46" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/>
+<text x="850" y="364" text-anchor="middle" font-family="Arial" font-size="14">Schema Runtime</text>
+<line x1="850" y1="382" x2="850" y2="406" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="770" y="406" width="160" height="46" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/>
+<text x="850" y="434" text-anchor="middle" font-family="Arial" font-size="14">Encoding Engine</text>
+<line x1="850" y1="452" x2="850" y2="476" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="770" y="476" width="160" height="46" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/>
+<text x="850" y="504" text-anchor="middle" font-family="Arial" font-size="14">Packet Builder</text>
+<line x1="850" y1="522" x2="850" y2="546" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="770" y="546" width="160" height="46" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/>
+<text x="850" y="574" text-anchor="middle" font-family="Arial" font-size="14">Measurement</text>
+
+<line x1="150" y1="482" x2="150" y2="616" stroke="#1F2933" stroke-width="1.5"/>
+<line x1="370" y1="482" x2="370" y2="616" stroke="#1F2933" stroke-width="1.5"/>
+<line x1="590" y1="482" x2="590" y2="616" stroke="#1F2933" stroke-width="1.5"/>
+<line x1="850" y1="592" x2="850" y2="616" stroke="#1F2933" stroke-width="1.5"/>
+<line x1="150" y1="616" x2="850" y2="616" stroke="#1F2933" stroke-width="1.5"/>
+<line x1="500" y1="616" x2="500" y2="646" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<rect x="330" y="646" width="340" height="60" rx="6" fill="#EEF6FF" stroke="#1F2933" stroke-width="1.5"/>
+<text x="500" y="671" text-anchor="middle" font-family="Arial" font-size="15" font-weight="700">Common Benchmark Harness</text>
+<text x="500" y="692" text-anchor="middle" font-family="Arial" font-size="12">benchmark_runner and run_format_benchmarks()</text>
+
+<line x1="500" y1="706" x2="500" y2="736" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<rect x="250" y="736" width="500" height="76" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/>
+<text x="500" y="760" text-anchor="middle" font-family="Arial" font-size="15" fill="#276FBF" font-weight="700">Performance Measurement</text>
+<text x="500" y="784" text-anchor="middle" font-family="Arial" font-size="13">Packet Size   Encode Latency   Decode Latency   Throughput</text>
+<text x="500" y="804" text-anchor="middle" font-family="Arial" font-size="13">Allocations   Allocated Bytes</text>
+
+<line x1="500" y1="812" x2="500" y2="842" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<rect x="335" y="842" width="330" height="46" rx="6" fill="#EEF6FF" stroke="#1F2933" stroke-width="1.5"/>
+<text x="500" y="870" text-anchor="middle" font-family="Arial" font-size="14" font-weight="700">Experimental Results (Graphs in Section V)</text>
+
+<rect x="970" y="185" width="200" height="274" rx="6" fill="#FFFFFF" stroke="#1F2933" stroke-width="1.5"/>
+<rect x="970" y="185" width="200" height="40" rx="6" fill="#EEF6FF" stroke="#1F2933" stroke-width="1.5"/>
+<text x="1070" y="211" text-anchor="middle" font-family="Arial" font-size="14" fill="#276FBF" font-weight="700">Evaluation Principles</text>
+<text x="990" y="250" font-family="Arial" font-size="13">Identical Input Data</text>
+<text x="990" y="284" font-family="Arial" font-size="13">Same Compiler Settings</text>
+<text x="990" y="318" font-family="Arial" font-size="13">Same Build Configuration</text>
+<text x="990" y="352" font-family="Arial" font-size="13">Same Benchmark Harness</text>
+<text x="990" y="386" font-family="Arial" font-size="13">Repeated Executions</text>
+<text x="990" y="420" font-family="Arial" font-size="13">Reproducible Evaluation</text>
+
+<text x="600" y="894" text-anchor="middle" font-family="Arial" font-size="12">Benchmark configuration used for the comparative evaluation of Keydrop and representative serialization frameworks.</text>
+</svg>

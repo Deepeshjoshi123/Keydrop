@@ -122,13 +122,20 @@ SchemaRuntime make_benchmark_runtime()
     return runtime;
 }
 
-NamedPayload to_named_payload(const BenchmarkPayload& payload)
+const SchemaRuntime& benchmark_runtime()
 {
-    NamedPayload named;
-    named["temperature"] = FieldValue::from_u16(payload.temperature);
-    named["humidity"] = FieldValue::from_u16(payload.humidity);
-    named["device_id"] = FieldValue::from_string(payload.device_id);
-    return named;
+    static const SchemaRuntime runtime = make_benchmark_runtime();
+    return runtime;
+}
+
+OrderedPayload to_ordered_payload(const BenchmarkPayload& payload)
+{
+    OrderedPayload ordered;
+    ordered.reserve(3);
+    ordered.push_back(FieldValue::from_u16(payload.temperature));
+    ordered.push_back(FieldValue::from_u16(payload.humidity));
+    ordered.push_back(FieldValue::from_string(payload.device_id));
+    return ordered;
 }
 
 bool from_named_payload(const NamedPayload& named, BenchmarkPayload& out_payload)
@@ -258,9 +265,8 @@ bool payloads_equal(const BenchmarkPayload& left, const BenchmarkPayload& right)
 
 EncodedPayload encode_keydrop_payload(const BenchmarkPayload& payload)
 {
-    SchemaRuntime runtime = make_benchmark_runtime();
     Buffer packet;
-    (void)runtime.send("BenchmarkPayload", to_named_payload(payload), packet);
+    (void)benchmark_runtime().send_ordered("BenchmarkPayload", to_ordered_payload(payload), packet);
     return {"keydrop", packet};
 }
 
@@ -303,10 +309,9 @@ EncodedPayload encode_messagepack_payload(const BenchmarkPayload& payload)
 
 bool decode_keydrop_payload(const Buffer& bytes, BenchmarkPayload& out_payload)
 {
-    SchemaRuntime runtime = make_benchmark_runtime();
     std::string schema_name;
     NamedPayload named;
-    if (!runtime.receive(bytes, schema_name, named).ok())
+    if (!benchmark_runtime().receive(bytes, schema_name, named).ok())
     {
         return false;
     }

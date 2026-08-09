@@ -1,7 +1,6 @@
 #include "keydrop/schema/field_mapper.hpp"
 
 #include <sstream>
-#include <unordered_map>
 
 namespace keydrop {
 
@@ -57,13 +56,6 @@ FieldMapperResult FieldMapper::map_named_to_ordered(
     out_ordered_payload.clear();
     out_ordered_payload.resize(schema.fields.size());
 
-    std::unordered_map<std::string, usize> index_by_name;
-    index_by_name.reserve(schema.fields.size());
-    for (usize i = 0; i < schema.fields.size(); ++i)
-    {
-        index_by_name[schema.fields[i].name] = i;
-    }
-
     for (usize i = 0; i < schema.fields.size(); ++i)
     {
         const FieldDef& field = schema.fields[i];
@@ -85,11 +77,24 @@ FieldMapperResult FieldMapper::map_named_to_ordered(
         out_ordered_payload[i] = payload_it->second;
     }
 
-    for (NamedPayload::const_iterator it = named_payload.begin(); it != named_payload.end(); ++it)
+    if (named_payload.size() > schema.fields.size())
     {
-        if (index_by_name.find(it->first) == index_by_name.end())
+        for (NamedPayload::const_iterator it = named_payload.begin(); it != named_payload.end(); ++it)
         {
-            return {FieldMapperCode::unknown_extra_field, "Unknown extra field: " + it->first};
+            bool known = false;
+            for (usize i = 0; i < schema.fields.size(); ++i)
+            {
+                if (schema.fields[i].name == it->first)
+                {
+                    known = true;
+                    break;
+                }
+            }
+
+            if (!known)
+            {
+                return {FieldMapperCode::unknown_extra_field, "Unknown extra field: " + it->first};
+            }
         }
     }
 

@@ -20,6 +20,11 @@ const Buffer& PacketBuilder::buffer() const
     return buffer_;
 }
 
+void PacketBuilder::reserve(usize capacity)
+{
+    buffer_.reserve(capacity);
+}
+
 void PacketBuilder::clear()
 {
     buffer_.clear();

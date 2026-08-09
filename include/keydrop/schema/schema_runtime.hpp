@@ -53,6 +53,12 @@ public:
         Buffer& out_packet
     ) const;
 
+    SchemaRuntimeResult send_ordered(
+        const std::string& schema_name,
+        const OrderedPayload& payload,
+        Buffer& out_packet
+    ) const;
+
     SchemaRuntimeResult receive(
         const Buffer& packet,
         std::string& out_schema_name,

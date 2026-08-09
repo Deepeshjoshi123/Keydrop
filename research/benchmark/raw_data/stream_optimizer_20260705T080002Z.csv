@@ -1,0 +1,3 @@
+trial,timestamp_utc,system,machine,processor,python,iterations,messages,decoded_messages,emitted_packets,emitted_bytes,throughput_msg_per_sec,avg_latency_us_per_message
+0,20260705T080002Z,Windows,AMD64,"Intel64 Family 6 Model 142 Stepping 12, GenuineIntel",3.13.7,10,10000,10000,1670,203324,51300.7,19.4929
+1,20260705T080002Z,Windows,AMD64,"Intel64 Family 6 Model 142 Stepping 12, GenuineIntel",3.13.7,10,10000,10000,1670,203324,51277.8,19.5016

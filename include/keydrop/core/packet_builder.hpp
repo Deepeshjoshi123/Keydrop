@@ -36,6 +36,8 @@ public:
 
     const Buffer& buffer() const;
 
+    void reserve(usize capacity);
+
     void clear();
 
 private:

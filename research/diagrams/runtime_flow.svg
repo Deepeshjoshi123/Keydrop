@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="650" viewBox="0 0 1100 650">
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#1F2933"/></marker></defs>
+<rect width="100%" height="100%" fill="white"/>
+<text x="550.0" y="34" text-anchor="middle" font-family="Arial" font-size="22" font-weight="700">Runtime Flow</text>
+<rect x="80" y="120" width="170" height="65" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/><text x="165.0" y="157.5" text-anchor="middle" font-family="Arial" font-size="14">register_schema</text>
+<rect x="310" y="120" width="170" height="65" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/><text x="395.0" y="157.5" text-anchor="middle" font-family="Arial" font-size="14">send</text>
+<rect x="540" y="120" width="170" height="65" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/><text x="625.0" y="157.5" text-anchor="middle" font-family="Arial" font-size="14">send_stream</text>
+<rect x="770" y="120" width="170" height="65" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/><text x="855.0" y="157.5" text-anchor="middle" font-family="Arial" font-size="14">Transport send</text>
+<rect x="310" y="280" width="170" height="65" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/><text x="395.0" y="317.5" text-anchor="middle" font-family="Arial" font-size="14">receive</text>
+<rect x="540" y="280" width="170" height="65" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/><text x="625.0" y="317.5" text-anchor="middle" font-family="Arial" font-size="14">receive_stream</text>
+<rect x="770" y="280" width="170" height="65" rx="6" fill="#F7F9FB" stroke="#1F2933" stroke-width="1.5"/><text x="855.0" y="317.5" text-anchor="middle" font-family="Arial" font-size="14">Recovered stream</text>
+<line x1="250" y1="152" x2="310" y2="152" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="480" y1="152" x2="540" y2="152" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="710" y1="152" x2="770" y2="152" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="770" y1="280" x2="710" y2="312" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="540" y1="312" x2="480" y2="312" stroke="#1F2933" stroke-width="1.5" marker-end="url(#arrow)"/>
+</svg>

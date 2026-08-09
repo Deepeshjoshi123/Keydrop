@@ -1,0 +1,980 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="1010.16pt" height="282.96pt" viewBox="0 0 1010.16 282.96" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-07-08T22:12:09.544408</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.0, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 282.96 
+L 1010.16 282.96 
+L 1010.16 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="table_1">
+    <g id="patch_2">
+     <path d="M 7.902 75.929047 
+L 96.759345 75.929047 
+L 96.759345 36.144 
+L 7.902 36.144 
+z
+" style="fill: #f0f0f0; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_1">
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="52.330672" y="57.720727" transform="rotate(-0 52.330672 57.720727)">Framework</text>
+    </g>
+    <g id="patch_3">
+     <path d="M 96.759345 75.929047 
+L 160.228877 75.929047 
+L 160.228877 36.144 
+L 96.759345 36.144 
+z
+" style="fill: #f0f0f0; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_2">
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(117.745431 53.915959)">Binary</text>
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(116.738829 61.529631)">Format</text>
+    </g>
+    <g id="patch_4">
+     <path d="M 160.228877 75.929047 
+L 274.474034 75.929047 
+L 274.474034 36.144 
+L 160.228877 36.144 
+z
+" style="fill: #f0f0f0; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_3">
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="217.351455" y="57.720727" transform="rotate(-0 217.351455 57.720727)">Schema Support</text>
+    </g>
+    <g id="patch_5">
+     <path d="M 274.474034 75.929047 
+L 337.943566 75.929047 
+L 337.943566 36.144 
+L 274.474034 36.144 
+z
+" style="fill: #f0f0f0; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_4">
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(294.444964 53.913892)">Human</text>
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(291.6088 61.527563)">Readable</text>
+    </g>
+    <g id="patch_6">
+     <path d="M 337.943566 75.929047 
+L 392.950494 75.929047 
+L 392.950494 36.144 
+L 337.943566 36.144 
+z
+" style="fill: #f0f0f0; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_5">
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="365.44703" y="57.720727" transform="rotate(-0 365.44703 57.720727)">Zero Copy</text>
+    </g>
+    <g id="patch_7">
+     <path d="M 392.950494 75.929047 
+L 507.195651 75.929047 
+L 507.195651 36.144 
+L 392.950494 36.144 
+z
+" style="fill: #f0f0f0; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_6">
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(436.487658 53.913892)">Runtime</text>
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(429.39126 61.531698)">Optimization</text>
+    </g>
+    <g id="patch_8">
+     <path d="M 507.195651 75.929047 
+L 596.052996 75.929047 
+L 596.052996 36.144 
+L 507.195651 36.144 
+z
+" style="fill: #f0f0f0; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_7">
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(535.874573 53.913892)">Transport</text>
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(531.949112 61.527563)">Independent</text>
+    </g>
+    <g id="patch_9">
+     <path d="M 596.052996 75.929047 
+L 676.447736 75.929047 
+L 676.447736 36.144 
+L 596.052996 36.144 
+z
+" style="fill: #f0f0f0; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_8">
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(620.574757 53.911824)">Telemetry</text>
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(622.261741 61.529631)">Oriented</text>
+    </g>
+    <g id="patch_10">
+     <path d="M 676.447736 75.929047 
+L 748.379872 75.929047 
+L 748.379872 36.144 
+L 676.447736 36.144 
+z
+" style="fill: #f0f0f0; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_9">
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(703.557421 53.913892)">Cross</text>
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(698.429171 61.527563)">Platform</text>
+    </g>
+    <g id="patch_11">
+     <path d="M 748.379872 75.929047 
+L 816.080706 75.929047 
+L 816.080706 36.144 
+L 748.379872 36.144 
+z
+" style="fill: #f0f0f0; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_10">
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="782.230289" y="57.720727" transform="rotate(-0 782.230289 57.720727)">Open Source</text>
+    </g>
+    <g id="patch_12">
+     <path d="M 816.080706 75.929047 
+L 892.244145 75.929047 
+L 892.244145 36.144 
+L 816.080706 36.144 
+z
+" style="fill: #f0f0f0; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_11">
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(838.748019 53.913892)">Language</text>
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(842.201832 61.527563)">Neutral</text>
+    </g>
+    <g id="patch_13">
+     <path d="M 892.244145 75.929047 
+L 1002.258 75.929047 
+L 1002.258 36.144 
+L 892.244145 36.144 
+z
+" style="fill: #f0f0f0; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_12">
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(922.311307 53.913892)">Implementation</text>
+     <text style="font-weight: 700; font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(934.815979 61.531698)">Verified</text>
+    </g>
+    <g id="patch_14">
+     <path d="M 7.902 109.030206 
+L 96.759345 109.030206 
+L 96.759345 75.929047 
+L 7.902 75.929047 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_13">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="52.330672" y="94.222644" transform="rotate(-0 52.330672 94.222644)">JSON</text>
+    </g>
+    <g id="patch_15">
+     <path d="M 96.759345 109.030206 
+L 160.228877 109.030206 
+L 160.228877 75.929047 
+L 96.759345 75.929047 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_14">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="128.494111" y="94.222644" transform="rotate(-0 128.494111 94.222644)">No</text>
+    </g>
+    <g id="patch_16">
+     <path d="M 160.228877 109.030206 
+L 274.474034 109.030206 
+L 274.474034 75.929047 
+L 160.228877 75.929047 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_15">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(189.571533 90.356994)">Optional via JSON</text>
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(205.796924 98.095707)">Schema</text>
+    </g>
+    <g id="patch_17">
+     <path d="M 274.474034 109.030206 
+L 337.943566 109.030206 
+L 337.943566 75.929047 
+L 274.474034 75.929047 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_16">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="306.2088" y="94.222644" transform="rotate(-0 306.2088 94.222644)">Yes</text>
+    </g>
+    <g id="patch_18">
+     <path d="M 337.943566 109.030206 
+L 392.950494 109.030206 
+L 392.950494 75.929047 
+L 337.943566 75.929047 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_17">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="365.44703" y="94.222644" transform="rotate(-0 365.44703 94.222644)">No</text>
+    </g>
+    <g id="patch_19">
+     <path d="M 392.950494 109.030206 
+L 507.195651 109.030206 
+L 507.195651 75.929047 
+L 392.950494 75.929047 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_18">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="450.073072" y="94.222644" transform="rotate(-0 450.073072 94.222644)">No</text>
+    </g>
+    <g id="patch_20">
+     <path d="M 507.195651 109.030206 
+L 596.052996 109.030206 
+L 596.052996 75.929047 
+L 507.195651 75.929047 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_19">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="551.624323" y="94.222644" transform="rotate(-0 551.624323 94.222644)">Yes</text>
+    </g>
+    <g id="patch_21">
+     <path d="M 596.052996 109.030206 
+L 676.447736 109.030206 
+L 676.447736 75.929047 
+L 596.052996 75.929047 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_20">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="636.250366" y="94.222644" transform="rotate(-0 636.250366 94.222644)">No</text>
+    </g>
+    <g id="patch_22">
+     <path d="M 676.447736 109.030206 
+L 748.379872 109.030206 
+L 748.379872 75.929047 
+L 676.447736 75.929047 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_21">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="712.413804" y="94.222644" transform="rotate(-0 712.413804 94.222644)">Yes</text>
+    </g>
+    <g id="patch_23">
+     <path d="M 748.379872 109.030206 
+L 816.080706 109.030206 
+L 816.080706 75.929047 
+L 748.379872 75.929047 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_22">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(774.324047 90.353287)">Open</text>
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(769.864774 98.092)">standard</text>
+    </g>
+    <g id="patch_24">
+     <path d="M 816.080706 109.030206 
+L 892.244145 109.030206 
+L 892.244145 75.929047 
+L 816.080706 75.929047 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_23">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="854.162426" y="94.222644" transform="rotate(-0 854.162426 94.222644)">Yes</text>
+    </g>
+    <g id="patch_25">
+     <path d="M 892.244145 109.030206 
+L 1002.258 109.030206 
+L 1002.258 75.929047 
+L 892.244145 75.929047 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_24">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="947.251072" y="94.226351" transform="rotate(-0 947.251072 94.226351)">Official docs</text>
+    </g>
+    <g id="patch_26">
+     <path d="M 7.902 142.131364 
+L 96.759345 142.131364 
+L 96.759345 109.030206 
+L 7.902 109.030206 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_25">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="52.330672" y="127.32751" transform="rotate(-0 52.330672 127.32751)">Protocol Buffers</text>
+    </g>
+    <g id="patch_27">
+     <path d="M 96.759345 142.131364 
+L 160.228877 142.131364 
+L 160.228877 109.030206 
+L 96.759345 109.030206 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_26">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="128.494111" y="127.323803" transform="rotate(-0 128.494111 127.323803)">Yes</text>
+    </g>
+    <g id="patch_28">
+     <path d="M 160.228877 142.131364 
+L 274.474034 142.131364 
+L 274.474034 109.030206 
+L 160.228877 109.030206 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_27">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(194.442573 123.458153)">Required .proto</text>
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(206.406018 131.196866)">schema</text>
+    </g>
+    <g id="patch_29">
+     <path d="M 274.474034 142.131364 
+L 337.943566 142.131364 
+L 337.943566 109.030206 
+L 274.474034 109.030206 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_28">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="306.2088" y="127.323803" transform="rotate(-0 306.2088 127.323803)">No</text>
+    </g>
+    <g id="patch_30">
+     <path d="M 337.943566 142.131364 
+L 392.950494 142.131364 
+L 392.950494 109.030206 
+L 337.943566 109.030206 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_29">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="365.44703" y="127.323803" transform="rotate(-0 365.44703 127.323803)">No</text>
+    </g>
+    <g id="patch_31">
+     <path d="M 392.950494 142.131364 
+L 507.195651 142.131364 
+L 507.195651 109.030206 
+L 392.950494 109.030206 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_30">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(426.970854 123.458153)">Generated-code</text>
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(431.623463 131.196866)">optimization</text>
+    </g>
+    <g id="patch_32">
+     <path d="M 507.195651 142.131364 
+L 596.052996 142.131364 
+L 596.052996 109.030206 
+L 507.195651 109.030206 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_31">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="551.624323" y="127.323803" transform="rotate(-0 551.624323 127.323803)">Yes</text>
+    </g>
+    <g id="patch_33">
+     <path d="M 596.052996 142.131364 
+L 676.447736 142.131364 
+L 676.447736 109.030206 
+L 596.052996 109.030206 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_32">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="636.250366" y="127.323803" transform="rotate(-0 636.250366 127.323803)">No</text>
+    </g>
+    <g id="patch_34">
+     <path d="M 676.447736 142.131364 
+L 748.379872 142.131364 
+L 748.379872 109.030206 
+L 676.447736 109.030206 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_33">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="712.413804" y="127.323803" transform="rotate(-0 712.413804 127.323803)">Yes</text>
+    </g>
+    <g id="patch_35">
+     <path d="M 748.379872 142.131364 
+L 816.080706 142.131364 
+L 816.080706 109.030206 
+L 748.379872 109.030206 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_34">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="782.230289" y="127.323803" transform="rotate(-0 782.230289 127.323803)">Yes</text>
+    </g>
+    <g id="patch_36">
+     <path d="M 816.080706 142.131364 
+L 892.244145 142.131364 
+L 892.244145 109.030206 
+L 816.080706 109.030206 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_35">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="854.162426" y="127.323803" transform="rotate(-0 854.162426 127.323803)">Yes</text>
+    </g>
+    <g id="patch_37">
+     <path d="M 892.244145 142.131364 
+L 1002.258 142.131364 
+L 1002.258 109.030206 
+L 892.244145 109.030206 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_36">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="947.251072" y="127.32751" transform="rotate(-0 947.251072 127.32751)">Official docs</text>
+    </g>
+    <g id="patch_38">
+     <path d="M 7.902 175.232523 
+L 96.759345 175.232523 
+L 96.759345 142.131364 
+L 7.902 142.131364 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_37">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="52.330672" y="160.428669" transform="rotate(-0 52.330672 160.428669)">MessagePack</text>
+    </g>
+    <g id="patch_39">
+     <path d="M 96.759345 175.232523 
+L 160.228877 175.232523 
+L 160.228877 142.131364 
+L 96.759345 142.131364 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_38">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="128.494111" y="160.424962" transform="rotate(-0 128.494111 160.424962)">Yes</text>
+    </g>
+    <g id="patch_40">
+     <path d="M 160.228877 175.232523 
+L 274.474034 175.232523 
+L 274.474034 142.131364 
+L 160.228877 142.131364 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_39">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="217.351455" y="160.424962" transform="rotate(-0 217.351455 160.424962)">No</text>
+    </g>
+    <g id="patch_41">
+     <path d="M 274.474034 175.232523 
+L 337.943566 175.232523 
+L 337.943566 142.131364 
+L 274.474034 142.131364 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_40">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="306.2088" y="160.424962" transform="rotate(-0 306.2088 160.424962)">No</text>
+    </g>
+    <g id="patch_42">
+     <path d="M 337.943566 175.232523 
+L 392.950494 175.232523 
+L 392.950494 142.131364 
+L 337.943566 142.131364 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_41">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="365.44703" y="160.424962" transform="rotate(-0 365.44703 160.424962)">No</text>
+    </g>
+    <g id="patch_43">
+     <path d="M 392.950494 175.232523 
+L 507.195651 175.232523 
+L 507.195651 142.131364 
+L 392.950494 142.131364 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_42">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="450.073072" y="160.424962" transform="rotate(-0 450.073072 160.424962)">No</text>
+    </g>
+    <g id="patch_44">
+     <path d="M 507.195651 175.232523 
+L 596.052996 175.232523 
+L 596.052996 142.131364 
+L 507.195651 142.131364 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_43">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="551.624323" y="160.424962" transform="rotate(-0 551.624323 160.424962)">Yes</text>
+    </g>
+    <g id="patch_45">
+     <path d="M 596.052996 175.232523 
+L 676.447736 175.232523 
+L 676.447736 142.131364 
+L 596.052996 142.131364 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_44">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="636.250366" y="160.424962" transform="rotate(-0 636.250366 160.424962)">No</text>
+    </g>
+    <g id="patch_46">
+     <path d="M 676.447736 175.232523 
+L 748.379872 175.232523 
+L 748.379872 142.131364 
+L 676.447736 142.131364 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_45">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="712.413804" y="160.424962" transform="rotate(-0 712.413804 160.424962)">Yes</text>
+    </g>
+    <g id="patch_47">
+     <path d="M 748.379872 175.232523 
+L 816.080706 175.232523 
+L 816.080706 142.131364 
+L 748.379872 142.131364 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_46">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="782.230289" y="160.424962" transform="rotate(-0 782.230289 160.424962)">Yes</text>
+    </g>
+    <g id="patch_48">
+     <path d="M 816.080706 175.232523 
+L 892.244145 175.232523 
+L 892.244145 142.131364 
+L 816.080706 142.131364 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_47">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="854.162426" y="160.424962" transform="rotate(-0 854.162426 160.424962)">Yes</text>
+    </g>
+    <g id="patch_49">
+     <path d="M 892.244145 175.232523 
+L 1002.258 175.232523 
+L 1002.258 142.131364 
+L 892.244145 142.131364 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_48">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="947.251072" y="160.428669" transform="rotate(-0 947.251072 160.428669)">Official docs</text>
+    </g>
+    <g id="patch_50">
+     <path d="M 7.902 208.333682 
+L 96.759345 208.333682 
+L 96.759345 175.232523 
+L 7.902 175.232523 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_49">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="52.330672" y="193.529827" transform="rotate(-0 52.330672 193.529827)">FlatBuffers</text>
+    </g>
+    <g id="patch_51">
+     <path d="M 96.759345 208.333682 
+L 160.228877 208.333682 
+L 160.228877 175.232523 
+L 96.759345 175.232523 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_50">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="128.494111" y="193.52612" transform="rotate(-0 128.494111 193.52612)">Yes</text>
+    </g>
+    <g id="patch_52">
+     <path d="M 160.228877 208.333682 
+L 274.474034 208.333682 
+L 274.474034 175.232523 
+L 160.228877 175.232523 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_51">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(197.68594 189.660471)">Required .fbs</text>
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(206.406018 197.399184)">schema</text>
+    </g>
+    <g id="patch_53">
+     <path d="M 274.474034 208.333682 
+L 337.943566 208.333682 
+L 337.943566 175.232523 
+L 274.474034 175.232523 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_52">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="306.2088" y="193.52612" transform="rotate(-0 306.2088 193.52612)">No</text>
+    </g>
+    <g id="patch_54">
+     <path d="M 337.943566 208.333682 
+L 392.950494 208.333682 
+L 392.950494 175.232523 
+L 337.943566 175.232523 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_53">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="365.44703" y="193.52612" transform="rotate(-0 365.44703 193.52612)">Yes</text>
+    </g>
+    <g id="patch_55">
+     <path d="M 392.950494 208.333682 
+L 507.195651 208.333682 
+L 507.195651 175.232523 
+L 392.950494 175.232523 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_54">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="450.073072" y="193.52612" transform="rotate(-0 450.073072 193.52612)">No</text>
+    </g>
+    <g id="patch_56">
+     <path d="M 507.195651 208.333682 
+L 596.052996 208.333682 
+L 596.052996 175.232523 
+L 507.195651 175.232523 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_55">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="551.624323" y="193.52612" transform="rotate(-0 551.624323 193.52612)">Yes</text>
+    </g>
+    <g id="patch_57">
+     <path d="M 596.052996 208.333682 
+L 676.447736 208.333682 
+L 676.447736 175.232523 
+L 596.052996 175.232523 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_56">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="636.250366" y="193.52612" transform="rotate(-0 636.250366 193.52612)">No</text>
+    </g>
+    <g id="patch_58">
+     <path d="M 676.447736 208.333682 
+L 748.379872 208.333682 
+L 748.379872 175.232523 
+L 676.447736 175.232523 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_57">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="712.413804" y="193.52612" transform="rotate(-0 712.413804 193.52612)">Yes</text>
+    </g>
+    <g id="patch_59">
+     <path d="M 748.379872 208.333682 
+L 816.080706 208.333682 
+L 816.080706 175.232523 
+L 748.379872 175.232523 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_58">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="782.230289" y="193.52612" transform="rotate(-0 782.230289 193.52612)">Yes</text>
+    </g>
+    <g id="patch_60">
+     <path d="M 816.080706 208.333682 
+L 892.244145 208.333682 
+L 892.244145 175.232523 
+L 816.080706 175.232523 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_59">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="854.162426" y="193.52612" transform="rotate(-0 854.162426 193.52612)">Yes</text>
+    </g>
+    <g id="patch_61">
+     <path d="M 892.244145 208.333682 
+L 1002.258 208.333682 
+L 1002.258 175.232523 
+L 892.244145 175.232523 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_60">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="947.251072" y="193.529827" transform="rotate(-0 947.251072 193.529827)">Official docs</text>
+    </g>
+    <g id="patch_62">
+     <path d="M 7.902 241.434841 
+L 96.759345 241.434841 
+L 96.759345 208.333682 
+L 7.902 208.333682 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_61">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="52.330672" y="226.627279" transform="rotate(-0 52.330672 226.627279)">Cap'n Proto</text>
+    </g>
+    <g id="patch_63">
+     <path d="M 96.759345 241.434841 
+L 160.228877 241.434841 
+L 160.228877 208.333682 
+L 96.759345 208.333682 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_62">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="128.494111" y="226.627279" transform="rotate(-0 128.494111 226.627279)">Yes</text>
+    </g>
+    <g id="patch_64">
+     <path d="M 160.228877 241.434841 
+L 274.474034 241.434841 
+L 274.474034 208.333682 
+L 160.228877 208.333682 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_63">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="217.351455" y="226.630986" transform="rotate(-0 217.351455 226.630986)">Required schema</text>
+    </g>
+    <g id="patch_65">
+     <path d="M 274.474034 241.434841 
+L 337.943566 241.434841 
+L 337.943566 208.333682 
+L 274.474034 208.333682 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_64">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="306.2088" y="226.627279" transform="rotate(-0 306.2088 226.627279)">No</text>
+    </g>
+    <g id="patch_66">
+     <path d="M 337.943566 241.434841 
+L 392.950494 241.434841 
+L 392.950494 208.333682 
+L 337.943566 208.333682 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_65">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="365.44703" y="226.627279" transform="rotate(-0 365.44703 226.627279)">Yes</text>
+    </g>
+    <g id="patch_67">
+     <path d="M 392.950494 241.434841 
+L 507.195651 241.434841 
+L 507.195651 208.333682 
+L 392.950494 208.333682 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_66">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="450.073072" y="226.627279" transform="rotate(-0 450.073072 226.627279)">No</text>
+    </g>
+    <g id="patch_68">
+     <path d="M 507.195651 241.434841 
+L 596.052996 241.434841 
+L 596.052996 208.333682 
+L 507.195651 208.333682 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_67">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="551.624323" y="226.627279" transform="rotate(-0 551.624323 226.627279)">Yes</text>
+    </g>
+    <g id="patch_69">
+     <path d="M 596.052996 241.434841 
+L 676.447736 241.434841 
+L 676.447736 208.333682 
+L 596.052996 208.333682 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_68">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="636.250366" y="226.627279" transform="rotate(-0 636.250366 226.627279)">No</text>
+    </g>
+    <g id="patch_70">
+     <path d="M 676.447736 241.434841 
+L 748.379872 241.434841 
+L 748.379872 208.333682 
+L 676.447736 208.333682 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_69">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="712.413804" y="226.627279" transform="rotate(-0 712.413804 226.627279)">Yes</text>
+    </g>
+    <g id="patch_71">
+     <path d="M 748.379872 241.434841 
+L 816.080706 241.434841 
+L 816.080706 208.333682 
+L 748.379872 208.333682 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_70">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="782.230289" y="226.627279" transform="rotate(-0 782.230289 226.627279)">Yes</text>
+    </g>
+    <g id="patch_72">
+     <path d="M 816.080706 241.434841 
+L 892.244145 241.434841 
+L 892.244145 208.333682 
+L 816.080706 208.333682 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_71">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="854.162426" y="226.627279" transform="rotate(-0 854.162426 226.627279)">Yes</text>
+    </g>
+    <g id="patch_73">
+     <path d="M 892.244145 241.434841 
+L 1002.258 241.434841 
+L 1002.258 208.333682 
+L 892.244145 208.333682 
+z
+" style="fill: #ffffff; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_72">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="947.251072" y="226.630986" transform="rotate(-0 947.251072 226.630986)">Official docs</text>
+    </g>
+    <g id="patch_74">
+     <path d="M 7.902 274.536 
+L 96.759345 274.536 
+L 96.759345 241.434841 
+L 7.902 241.434841 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_73">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="52.330672" y="259.732145" transform="rotate(-0 52.330672 259.732145)">Keydrop</text>
+    </g>
+    <g id="patch_75">
+     <path d="M 96.759345 274.536 
+L 160.228877 274.536 
+L 160.228877 241.434841 
+L 96.759345 241.434841 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_74">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="128.494111" y="259.728438" transform="rotate(-0 128.494111 259.728438)">Yes</text>
+    </g>
+    <g id="patch_76">
+     <path d="M 160.228877 274.536 
+L 274.474034 274.536 
+L 274.474034 241.434841 
+L 160.228877 241.434841 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_75">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="217.351455" y="259.728438" transform="rotate(-0 217.351455 259.728438)">Yes</text>
+    </g>
+    <g id="patch_77">
+     <path d="M 274.474034 274.536 
+L 337.943566 274.536 
+L 337.943566 241.434841 
+L 274.474034 241.434841 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_76">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="306.2088" y="259.728438" transform="rotate(-0 306.2088 259.728438)">No</text>
+    </g>
+    <g id="patch_78">
+     <path d="M 337.943566 274.536 
+L 392.950494 274.536 
+L 392.950494 241.434841 
+L 337.943566 241.434841 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_77">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="365.44703" y="259.728438" transform="rotate(-0 365.44703 259.728438)">No</text>
+    </g>
+    <g id="patch_79">
+     <path d="M 392.950494 274.536 
+L 507.195651 274.536 
+L 507.195651 241.434841 
+L 392.950494 241.434841 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_78">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="450.073072" y="259.728438" transform="rotate(-0 450.073072 259.728438)">Yes</text>
+    </g>
+    <g id="patch_80">
+     <path d="M 507.195651 274.536 
+L 596.052996 274.536 
+L 596.052996 241.434841 
+L 507.195651 241.434841 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_79">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="551.624323" y="259.728438" transform="rotate(-0 551.624323 259.728438)">Yes</text>
+    </g>
+    <g id="patch_81">
+     <path d="M 596.052996 274.536 
+L 676.447736 274.536 
+L 676.447736 241.434841 
+L 596.052996 241.434841 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_80">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="636.250366" y="259.728438" transform="rotate(-0 636.250366 259.728438)">Yes</text>
+    </g>
+    <g id="patch_82">
+     <path d="M 676.447736 274.536 
+L 748.379872 274.536 
+L 748.379872 241.434841 
+L 676.447736 241.434841 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_81">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="712.413804" y="259.728438" transform="rotate(-0 712.413804 259.728438)">Yes</text>
+    </g>
+    <g id="patch_83">
+     <path d="M 748.379872 274.536 
+L 816.080706 274.536 
+L 816.080706 241.434841 
+L 748.379872 241.434841 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_82">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="782.230289" y="259.728438" transform="rotate(-0 782.230289 259.728438)">Yes</text>
+    </g>
+    <g id="patch_84">
+     <path d="M 816.080706 274.536 
+L 892.244145 274.536 
+L 892.244145 241.434841 
+L 816.080706 241.434841 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_83">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="854.162426" y="259.728438" transform="rotate(-0 854.162426 259.728438)">No</text>
+    </g>
+    <g id="patch_85">
+     <path d="M 892.244145 274.536 
+L 1002.258 274.536 
+L 1002.258 241.434841 
+L 892.244145 241.434841 
+z
+" style="fill: #f7f7f7; stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_84">
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(931.232135 255.862789)">Repository</text>
+     <text style="font-size: 7.3px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif" transform="translate(935.901854 263.601502)">verified</text>
+    </g>
+   </g>
+   <g id="text_85">
+    <text style="font-weight: 700; font-size: 8.5px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="505.08" y="17.31506" transform="rotate(-0 505.08 17.31506)">TABLE I</text>
+   </g>
+   <g id="text_86">
+    <text style="font-size: 8px; font-family: 'Times New Roman', 'Times', 'DejaVu Serif', serif; text-anchor: middle" x="505.08" y="28.356219" transform="rotate(-0 505.08 28.356219)">Comparison of Existing Telemetry Serialization Systems</text>
+   </g>
+  </g>
+ </g>
+</svg>

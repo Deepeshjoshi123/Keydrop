@@ -1,0 +1,8 @@
+Keydrop Benchmark Results
+=========================
+format              packet       encode_ns       decode_ns          allocs       alloc_bytes      throughput/s
+--------------------------------------------------------------------------------------------------------------
+keydrop                 17            0.00       100100.00              10               170           9990.01
+json                    56            0.00            0.00              10               560              0.00
+protobuf                18            0.00            0.00              10               180              0.00
+messagepack             47            0.00            0.00              10               470              0.00

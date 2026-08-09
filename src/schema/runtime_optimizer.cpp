@@ -43,8 +43,6 @@ RuntimeOptimizerResult RuntimeOptimizer::optimize_packet(
     const RuntimeOptimizerConfig& config
 )
 {
-    output_packet = input_packet;
-
     if (!config.enabled || !config.enable_zero_value_omission)
     {
         return {true, false, 0};
@@ -54,6 +52,8 @@ RuntimeOptimizerResult RuntimeOptimizer::optimize_packet(
     {
         return {false, false, 0};
     }
+
+    output_packet = input_packet;
 
     const std::vector<byte>& bytes = input_packet.data();
     usize cursor = 2;

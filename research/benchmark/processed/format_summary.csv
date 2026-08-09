@@ -1,0 +1,5 @@
+format,samples,packet_size_bytes_mean,packet_size_bytes_stdev,packet_size_bytes_min,packet_size_bytes_max,encode_latency_ns_mean,encode_latency_ns_stdev,encode_latency_ns_min,encode_latency_ns_max,decode_latency_ns_mean,decode_latency_ns_stdev,decode_latency_ns_min,decode_latency_ns_max,allocations_mean,allocations_stdev,allocations_min,allocations_max,allocated_bytes_mean,allocated_bytes_stdev,allocated_bytes_min,allocated_bytes_max,throughput_per_sec_mean,throughput_per_sec_stdev,throughput_per_sec_min,throughput_per_sec_max
+json,2,56.0,0.0,56.0,56.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,10.0,0.0,10.0,10.0,560.0,0.0,560.0,560.0,0.0,0.0,0.0,0.0
+keydrop,2,17.0,0.0,17.0,17.0,0.0,0.0,0.0,0.0,50050.0,70781.3887967734,0.0,100100.0,10.0,0.0,10.0,10.0,170.0,0.0,170.0,170.0,4995.005,7064.003815121422,0.0,9990.01
+messagepack,2,47.0,0.0,47.0,47.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,10.0,0.0,10.0,10.0,470.0,0.0,470.0,470.0,0.0,0.0,0.0,0.0
+protobuf,2,18.0,0.0,18.0,18.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,10.0,0.0,10.0,10.0,180.0,0.0,180.0,180.0,0.0,0.0,0.0,0.0

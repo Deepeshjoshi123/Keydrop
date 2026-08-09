@@ -1,0 +1,9 @@
+trial,timestamp_utc,system,machine,processor,python,iterations,format,packet_size_bytes,encode_latency_ns,decode_latency_ns,allocations,allocated_bytes,throughput_per_sec
+0,20260705T080002Z,Windows,AMD64,"Intel64 Family 6 Model 142 Stepping 12, GenuineIntel",3.13.7,10,keydrop,17,0.00,0.00,10,170,0.00
+0,20260705T080002Z,Windows,AMD64,"Intel64 Family 6 Model 142 Stepping 12, GenuineIntel",3.13.7,10,json,56,0.00,0.00,10,560,0.00
+0,20260705T080002Z,Windows,AMD64,"Intel64 Family 6 Model 142 Stepping 12, GenuineIntel",3.13.7,10,protobuf,18,0.00,0.00,10,180,0.00
+0,20260705T080002Z,Windows,AMD64,"Intel64 Family 6 Model 142 Stepping 12, GenuineIntel",3.13.7,10,messagepack,47,0.00,0.00,10,470,0.00
+1,20260705T080002Z,Windows,AMD64,"Intel64 Family 6 Model 142 Stepping 12, GenuineIntel",3.13.7,10,keydrop,17,0.00,100100.00,10,170,9990.01
+1,20260705T080002Z,Windows,AMD64,"Intel64 Family 6 Model 142 Stepping 12, GenuineIntel",3.13.7,10,json,56,0.00,0.00,10,560,0.00
+1,20260705T080002Z,Windows,AMD64,"Intel64 Family 6 Model 142 Stepping 12, GenuineIntel",3.13.7,10,protobuf,18,0.00,0.00,10,180,0.00
+1,20260705T080002Z,Windows,AMD64,"Intel64 Family 6 Model 142 Stepping 12, GenuineIntel",3.13.7,10,messagepack,47,0.00,0.00,10,470,0.00

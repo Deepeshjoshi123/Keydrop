@@ -311,6 +311,82 @@ JsonValue field_value_to_json_value(const FieldValue& field_value)
     return JsonValue::from_integer(0);
 }
 
+usize estimate_encoded_packet_size(
+    const PacketLayout& layout,
+    const OrderedPayload& ordered_payload
+)
+{
+    usize size = 2;
+    for (usize i = 0; i < layout.fields.size(); ++i)
+    {
+        const FieldLayout& field_layout = layout.fields[i];
+        const FieldValue& value = ordered_payload[field_layout.schema_index];
+        if (!field_layout.variable_length)
+        {
+            size += field_layout.fixed_size;
+            continue;
+        }
+
+        size += 2;
+        if (value.type == FieldType::string)
+        {
+            size += value.as_string.size();
+        }
+        else if (value.type == FieldType::bytes)
+        {
+            size += value.as_bytes.size();
+        }
+    }
+    return size;
+}
+
+SchemaRuntimeResult encode_ordered_with_schema(
+    const SchemaDef& schema,
+    const PacketLayout& layout,
+    const OrderedPayload& ordered_payload,
+    const RuntimeOptimizerConfig& optimizer_config,
+    AdaptiveDictionary& dictionary,
+    BufferPool& buffer_pool,
+    Buffer& out_packet
+)
+{
+    const SchemaValidationResult payload_validation =
+        SchemaValidator::validate_payload_values(schema, ordered_payload);
+    if (!payload_validation.ok())
+    {
+        return {SchemaRuntimeCode::schema_mismatch, payload_validation.message};
+    }
+
+    Encoder encoder;
+    encoder.reserve(estimate_encoded_packet_size(layout, ordered_payload));
+    encoder.write_u16(schema.message_id);
+
+    for (usize i = 0; i < layout.fields.size(); ++i)
+    {
+        const FieldLayout& field_layout = layout.fields[i];
+        const usize value_index = field_layout.schema_index;
+        kEncodeField[static_cast<usize>(field_layout.codec)](
+            encoder,
+            ordered_payload[value_index],
+            dictionary,
+            dictionary.config()
+        );
+    }
+
+    Buffer encoded_packet = encoder.buffer();
+    BufferLease optimized_packet_lease = buffer_pool.lease();
+    Buffer& optimized_packet = optimized_packet_lease.get();
+    const RuntimeOptimizerResult optimize_result =
+        RuntimeOptimizer::optimize_packet(schema, encoded_packet, optimized_packet, optimizer_config);
+    if (!optimize_result.ok)
+    {
+        return {SchemaRuntimeCode::decode_failed, "Runtime optimization failed."};
+    }
+
+    out_packet = optimize_result.applied ? optimized_packet : encoded_packet;
+    return {SchemaRuntimeCode::ok, "Packet encoded successfully."};
+}
+
 } // namespace
 
 SchemaRegistryStatus SchemaRuntime::register_schema(const SchemaDef& schema)
@@ -342,15 +418,6 @@ SchemaRuntimeResult SchemaRuntime::send(
         return {SchemaRuntimeCode::schema_invalid, "Packet layout not found for schema."};
     }
 
-    const SchemaValidationResult validation = SchemaValidator::validate_schema(*schema, &registry_);
-    if (!validation.ok())
-    {
-        return {SchemaRuntimeCode::schema_invalid, validation.message};
-    }
-
-    Encoder encoder;
-    encoder.write_u16(schema->message_id);
-
     OrderedPayloadLease ordered_payload_lease =
         payload_pool_.lease_ordered(schema->fields.size());
     OrderedPayload& ordered_payload = ordered_payload_lease.get();
@@ -360,37 +427,44 @@ SchemaRuntimeResult SchemaRuntime::send(
         return {SchemaRuntimeCode::mapping_failed, mapped.message};
     }
 
-    const SchemaValidationResult payload_validation =
-        SchemaValidator::validate_payload_values(*schema, ordered_payload);
-    if (!payload_validation.ok())
+    return encode_ordered_with_schema(
+        *schema,
+        *layout,
+        ordered_payload,
+        optimizer_config_,
+        dictionary_,
+        buffer_pool_,
+        out_packet
+    );
+}
+
+SchemaRuntimeResult SchemaRuntime::send_ordered(
+    const std::string& schema_name,
+    const OrderedPayload& payload,
+    Buffer& out_packet
+) const
+{
+    const SchemaDef* schema = registry_.find_by_name(schema_name);
+    if (schema == nullptr)
     {
-        return {SchemaRuntimeCode::schema_mismatch, payload_validation.message};
+        return {SchemaRuntimeCode::schema_not_found, "Schema not found: " + schema_name};
     }
 
-    for (usize i = 0; i < layout->fields.size(); ++i)
+    const PacketLayout* layout = registry_.find_layout_by_name(schema_name);
+    if (layout == nullptr)
     {
-        const FieldLayout& field_layout = layout->fields[i];
-        const usize value_index = field_layout.schema_index;
-        kEncodeField[static_cast<usize>(field_layout.codec)](
-            encoder,
-            ordered_payload[value_index],
-            dictionary_,
-            dictionary_.config()
-        );
+        return {SchemaRuntimeCode::schema_invalid, "Packet layout not found for schema."};
     }
 
-    Buffer encoded_packet = encoder.buffer();
-    BufferLease optimized_packet_lease = buffer_pool_.lease();
-    Buffer& optimized_packet = optimized_packet_lease.get();
-    const RuntimeOptimizerResult optimize_result =
-        RuntimeOptimizer::optimize_packet(*schema, encoded_packet, optimized_packet, optimizer_config_);
-    if (!optimize_result.ok)
-    {
-        return {SchemaRuntimeCode::decode_failed, "Runtime optimization failed."};
-    }
-
-    out_packet = optimize_result.applied ? optimized_packet : encoded_packet;
-    return {SchemaRuntimeCode::ok, "Packet encoded successfully."};
+    return encode_ordered_with_schema(
+        *schema,
+        *layout,
+        payload,
+        optimizer_config_,
+        dictionary_,
+        buffer_pool_,
+        out_packet
+    );
 }
 
 SchemaRuntimeResult SchemaRuntime::receive(
