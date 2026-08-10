@@ -1,5 +1,7 @@
 #include "keydrop/core/packet_builder.hpp"
 
+#include <utility>
+
 namespace keydrop {
 
 PacketBuilder::PacketBuilder()
@@ -18,6 +20,11 @@ void PacketBuilder::write_bytes(
 const Buffer& PacketBuilder::buffer() const
 {
     return buffer_;
+}
+
+Buffer PacketBuilder::take_buffer()
+{
+    return std::move(buffer_);
 }
 
 void PacketBuilder::reserve(usize capacity)

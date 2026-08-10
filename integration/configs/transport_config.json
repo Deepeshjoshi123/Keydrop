@@ -1,0 +1,13 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 9876
+  },
+  "client": {
+    "host": "127.0.0.1",
+    "port": 9876
+  },
+  "scheduler": {
+    "comment": "TransportScheduler queues packets and flushes them in FIFO order"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "optimizer": {
+    "enabled": false,
+    "enable_zero_value_omission": true
+  },
+  "dictionary": {
+    "enabled": true,
+    "enable_string_values": true,
+    "max_entries": 256
+  },
+  "stream_optimizer": {
+    "enabled": true,
+    "enable_packet_reuse": true,
+    "enable_delta_updates": true,
+    "enable_batching": true,
+    "aggressive_after_samples": 8,
+    "max_batch_packets": 4,
+    "low_change_ratio_threshold": 0.35
+  },
+  "buffer_pool": {
+    "initial_buffers": 8,
+    "default_capacity": 512,
+    "max_available": 32
+  },
+  "payload_pool": {
+    "initial_payloads": 8,
+    "max_available": 32
+  }
+}

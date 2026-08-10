@@ -71,6 +71,11 @@ const Buffer& Encoder::buffer() const
     return builder_.buffer();
 }
 
+Buffer Encoder::take_buffer()
+{
+    return builder_.take_buffer();
+}
+
 void Encoder::reserve(usize capacity)
 {
     builder_.reserve(capacity);

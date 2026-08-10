@@ -111,14 +111,19 @@ f64 PacketReader::read_f64()
 std::string PacketReader::read_string()
 {
     const u16 size = read_u16();
-    std::string value;
-    value.reserve(size);
+    return read_string_from_size(size);
+}
 
-    for (u16 i = 0; i < size; ++i)
+std::string PacketReader::read_string_from_size(u16 size)
+{
+    if (remaining() < size)
     {
-        value.push_back(static_cast<char>(read_u8()));
+        throw std::out_of_range("PacketReader read_string out of range");
     }
 
+    const byte* data = buffer_.bytes();
+    std::string value(reinterpret_cast<const char*>(data + cursor_), size);
+    cursor_ += size;
     return value;
 }
 
@@ -129,13 +134,9 @@ std::vector<byte> PacketReader::read_bytes(usize size)
         throw std::out_of_range("PacketReader read_bytes out of range");
     }
 
-    std::vector<byte> out;
-    out.reserve(size);
-    for (usize i = 0; i < size; ++i)
-    {
-        out.push_back(read_u8());
-    }
-
+    const byte* data = buffer_.bytes();
+    std::vector<byte> out(data + cursor_, data + cursor_ + size);
+    cursor_ += size;
     return out;
 }
 

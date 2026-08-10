@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <sstream>
 
+#include "keydrop/benchmark/heap_tracker.hpp"
 #include "keydrop/schema/schema_runtime.hpp"
 
 namespace keydrop {
@@ -222,18 +223,24 @@ BenchmarkSample run_benchmark(
     sample.name = name;
     sample.iterations = iterations;
 
+    // Warm-up: one encode to populate caches, schema registries, etc.
     EncodedPayload first = encode(payload);
     sample.packet_size_bytes = first.bytes.size();
 
-    AllocationTracker allocation_tracker;
+    // ── Measure actual heap allocations during encode ──────────
+    HeapTracker::reset();
+    HeapTracker::begin();
     BenchmarkTimer timer;
     for (usize i = 0; i < iterations; ++i)
     {
         EncodedPayload encoded = encode(payload);
-        allocation_tracker.record(encoded.bytes.size());
     }
     sample.encode_time_ns = timer.elapsed_ns();
+    HeapTracker::end();
+    sample.allocations = HeapTracker::allocation_count();
+    sample.allocated_bytes = HeapTracker::allocated_bytes();
 
+    // ── Decode timing (no allocation tracking needed) ──────────
     timer.reset();
     for (usize i = 0; i < iterations; ++i)
     {
@@ -244,8 +251,6 @@ BenchmarkSample run_benchmark(
         }
     }
     sample.decode_time_ns = timer.elapsed_ns();
-    sample.allocations = allocation_tracker.allocations();
-    sample.allocated_bytes = allocation_tracker.allocated_bytes();
     return sample;
 }
 
@@ -310,14 +315,21 @@ EncodedPayload encode_messagepack_payload(const BenchmarkPayload& payload)
 bool decode_keydrop_payload(const Buffer& bytes, BenchmarkPayload& out_payload)
 {
     std::string schema_name;
-    NamedPayload named;
-    if (!benchmark_runtime().receive(bytes, schema_name, named).ok())
+    OrderedPayload ordered;
+    if (!benchmark_runtime().receive_ordered(bytes, schema_name, ordered).ok())
     {
         return false;
     }
 
-    return schema_name == "BenchmarkPayload"
-        && from_named_payload(named, out_payload);
+    if (schema_name != "BenchmarkPayload" || ordered.size() < 3)
+    {
+        return false;
+    }
+
+    out_payload.temperature = ordered[0].as_u16;
+    out_payload.humidity = ordered[1].as_u16;
+    out_payload.device_id = ordered[2].as_string;
+    return true;
 }
 
 bool decode_json_payload(const Buffer& bytes, BenchmarkPayload& out_payload)

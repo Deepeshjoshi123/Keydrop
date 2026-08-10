@@ -22,6 +22,7 @@ public:
     f32 read_f32();
     f64 read_f64();
     std::string read_string();
+    std::string read_string_from_size(u16 size);
     std::vector<byte> read_bytes(usize size);
 
     void reset();

@@ -30,6 +30,7 @@ target_sources(
         src/benchmark/benchmark_core.cpp
         src/benchmark/format_benchmark.cpp
         src/benchmark/benchmark_report.cpp
+        src/benchmark/heap_tracker.cpp
         src/platform/socket.cpp
         src/core/buffer.cpp
         src/core/buffer_pool.cpp
@@ -91,17 +92,19 @@ target_compile_options(
 
 endif()
 
-# Example
+# Legacy example (kept for CI test compatibility)
 add_executable(
     basic_encoding
     examples/basic_encoding.cpp
 )
-
 target_link_libraries(
     basic_encoding
     PRIVATE
         keydrop
 )
+
+# Integration examples
+add_subdirectory(integration)
 
 # Testing
 enable_testing()

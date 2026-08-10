@@ -1,0 +1,12 @@
+{
+  "name": "SensorTelemetry",
+  "message_id": 100,
+  "fields": [
+    {"name": "temperature",   "type": "u16",     "index": 0},
+    {"name": "humidity",      "type": "u16",     "index": 1},
+    {"name": "pressure",      "type": "u32",     "index": 2},
+    {"name": "device_id",     "type": "string",  "index": 3, "max_length": 64},
+    {"name": "firmware_ver",  "type": "string",  "index": 4, "max_length": 32},
+    {"name": "raw_log",       "type": "bytes",   "index": 5, "max_length": 256}
+  ]
+}

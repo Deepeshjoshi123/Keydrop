@@ -1,8 +1,9 @@
 #include "keydrop/schema/schema_runtime.hpp"
 
 #include <array>
-#include <limits>
 #include <deque>
+#include <limits>
+#include <memory>
 #include <stdexcept>
 #include <vector>
 
@@ -78,14 +79,11 @@ FieldValue decode_string(PacketReader& reader, AdaptiveDictionary& dictionary)
         return FieldValue::from_string(looked.value);
     }
 
-    std::string decoded;
-    decoded.reserve(marker_or_size);
-    for (u16 i = 0; i < marker_or_size; ++i)
+    const std::string decoded = reader.read_string_from_size(marker_or_size);
+    if (dictionary.config().enabled && dictionary.config().enable_string_values)
     {
-        decoded.push_back(static_cast<char>(reader.read_u8()));
+        (void)dictionary.create_or_get(decoded);
     }
-
-    (void)dictionary.create_or_get(decoded);
     return FieldValue::from_string(decoded);
 }
 
@@ -350,40 +348,69 @@ SchemaRuntimeResult encode_ordered_with_schema(
     Buffer& out_packet
 )
 {
+#ifndef NDEBUG
     const SchemaValidationResult payload_validation =
         SchemaValidator::validate_payload_values(schema, ordered_payload);
     if (!payload_validation.ok())
     {
         return {SchemaRuntimeCode::schema_mismatch, payload_validation.message};
     }
+#endif
 
     Encoder encoder;
     encoder.reserve(estimate_encoded_packet_size(layout, ordered_payload));
     encoder.write_u16(schema.message_id);
 
+    const auto& dict_cfg = dictionary.config();
     for (usize i = 0; i < layout.fields.size(); ++i)
     {
         const FieldLayout& field_layout = layout.fields[i];
-        const usize value_index = field_layout.schema_index;
-        kEncodeField[static_cast<usize>(field_layout.codec)](
-            encoder,
-            ordered_payload[value_index],
-            dictionary,
-            dictionary.config()
-        );
+        const FieldValue& value = ordered_payload[field_layout.schema_index];
+        switch (field_layout.codec)
+        {
+        case FieldCodec::u8_value:  encoder.write_u8(value.as_u8); break;
+        case FieldCodec::u16_value: encoder.write_u16(value.as_u16); break;
+        case FieldCodec::u32_value: encoder.write_u32(value.as_u32); break;
+        case FieldCodec::i8_value:  encoder.write_i8(value.as_i8); break;
+        case FieldCodec::i16_value: encoder.write_i16(value.as_i16); break;
+        case FieldCodec::i32_value: encoder.write_i32(value.as_i32); break;
+        case FieldCodec::f32_value: encoder.write_f32(value.as_f32); break;
+        case FieldCodec::f64_value: encoder.write_f64(value.as_f64); break;
+        case FieldCodec::string_value:
+            encode_string(encoder, value, dictionary, dict_cfg);
+            break;
+        case FieldCodec::bytes_value:
+            encode_bytes(encoder, value, dictionary, dict_cfg);
+            break;
+        case FieldCodec::count: break;
+        }
     }
 
-    Buffer encoded_packet = encoder.buffer();
-    BufferLease optimized_packet_lease = buffer_pool.lease();
-    Buffer& optimized_packet = optimized_packet_lease.get();
-    const RuntimeOptimizerResult optimize_result =
-        RuntimeOptimizer::optimize_packet(schema, encoded_packet, optimized_packet, optimizer_config);
-    if (!optimize_result.ok)
+    if (optimizer_config.enabled && optimizer_config.enable_zero_value_omission)
     {
-        return {SchemaRuntimeCode::decode_failed, "Runtime optimization failed."};
-    }
+        Buffer encoded_packet = encoder.take_buffer();
+        BufferLease optimized_packet_lease = buffer_pool.lease();
+        Buffer& optimized_packet = optimized_packet_lease.get();
+        const RuntimeOptimizerResult optimize_result =
+            RuntimeOptimizer::optimize_packet(schema, encoded_packet, optimized_packet, optimizer_config);
+        if (!optimize_result.ok)
+        {
+            return {SchemaRuntimeCode::decode_failed, "Runtime optimization failed."};
+        }
 
-    out_packet = optimize_result.applied ? optimized_packet : encoded_packet;
+        if (optimize_result.applied)
+        {
+            out_packet = std::move(optimized_packet);
+        }
+        else
+        {
+            out_packet = std::move(encoded_packet);
+        }
+    }
+    else
+    {
+        out_packet = encoder.take_buffer();
+    }
     return {SchemaRuntimeCode::ok, "Packet encoded successfully."};
 }
 
@@ -406,16 +433,31 @@ SchemaRuntimeResult SchemaRuntime::send(
     Buffer& out_packet
 ) const
 {
-    const SchemaDef* schema = registry_.find_by_name(schema_name);
-    if (schema == nullptr)
-    {
-        return {SchemaRuntimeCode::schema_not_found, "Schema not found: " + schema_name};
-    }
+    const SchemaDef* schema = nullptr;
+    const PacketLayout* layout = nullptr;
 
-    const PacketLayout* layout = registry_.find_layout_by_name(schema_name);
-    if (layout == nullptr)
+    if (schema_name == cached_schema_name_ && cached_schema_ != nullptr)
     {
-        return {SchemaRuntimeCode::schema_invalid, "Packet layout not found for schema."};
+        schema = cached_schema_;
+        layout = cached_layout_;
+    }
+    else
+    {
+        schema = registry_.find_by_name(schema_name);
+        if (schema == nullptr)
+        {
+            return {SchemaRuntimeCode::schema_not_found, "Schema not found: " + schema_name};
+        }
+
+        layout = registry_.find_layout_by_name(schema_name);
+        if (layout == nullptr)
+        {
+            return {SchemaRuntimeCode::schema_invalid, "Packet layout not found for schema."};
+        }
+
+        cached_schema_name_ = schema_name;
+        cached_schema_ = schema;
+        cached_layout_ = layout;
     }
 
     OrderedPayloadLease ordered_payload_lease =
@@ -444,16 +486,31 @@ SchemaRuntimeResult SchemaRuntime::send_ordered(
     Buffer& out_packet
 ) const
 {
-    const SchemaDef* schema = registry_.find_by_name(schema_name);
-    if (schema == nullptr)
-    {
-        return {SchemaRuntimeCode::schema_not_found, "Schema not found: " + schema_name};
-    }
+    const SchemaDef* schema = nullptr;
+    const PacketLayout* layout = nullptr;
 
-    const PacketLayout* layout = registry_.find_layout_by_name(schema_name);
-    if (layout == nullptr)
+    if (schema_name == cached_schema_name_ && cached_schema_ != nullptr)
     {
-        return {SchemaRuntimeCode::schema_invalid, "Packet layout not found for schema."};
+        schema = cached_schema_;
+        layout = cached_layout_;
+    }
+    else
+    {
+        schema = registry_.find_by_name(schema_name);
+        if (schema == nullptr)
+        {
+            return {SchemaRuntimeCode::schema_not_found, "Schema not found: " + schema_name};
+        }
+
+        layout = registry_.find_layout_by_name(schema_name);
+        if (layout == nullptr)
+        {
+            return {SchemaRuntimeCode::schema_invalid, "Packet layout not found for schema."};
+        }
+
+        cached_schema_name_ = schema_name;
+        cached_schema_ = schema;
+        cached_layout_ = layout;
     }
 
     return encode_ordered_with_schema(
@@ -502,6 +559,82 @@ SchemaRuntimeResult SchemaRuntime::receive(
     }
 }
 
+SchemaRuntimeResult SchemaRuntime::receive_ordered(
+    const Buffer& packet,
+    std::string& out_schema_name,
+    OrderedPayload& out_payload
+) const
+{
+    if (packet.size() < 2)
+    {
+        return {SchemaRuntimeCode::packet_too_small, "Packet too small to contain message_id."};
+    }
+
+    try
+    {
+        const u16 message_id = static_cast<u16>(packet.data()[0]) | (static_cast<u16>(packet.data()[1]) << 8);
+        const SchemaDef* schema = registry_.find_by_message_id(message_id);
+        if (schema == nullptr)
+        {
+            return {SchemaRuntimeCode::schema_not_found, "Schema not found for message_id."};
+        }
+
+        const PacketLayout* layout =
+            registry_.find_layout_by_message_id(schema->message_id);
+        if (layout == nullptr)
+        {
+            return {SchemaRuntimeCode::schema_invalid, "Packet layout not found for schema."};
+        }
+
+        // Only deoptimize if packet is actually optimized
+        const Buffer* decode_packet = &packet;
+        std::unique_ptr<BufferLease> decode_lease;
+
+        if (optimizer_config_.enabled && RuntimeOptimizer::is_optimized_packet(packet))
+        {
+            decode_lease.reset(new BufferLease(buffer_pool_.lease()));
+            Buffer& temp = decode_lease->get();
+            const RuntimeOptimizerResult deoptimize_result =
+                RuntimeOptimizer::deoptimize_packet(*schema, packet, temp);
+            if (!deoptimize_result.ok)
+            {
+                return {SchemaRuntimeCode::decode_failed, "Runtime deoptimization failed."};
+            }
+            decode_packet = &temp;
+        }
+
+        PacketReader reader(*decode_packet);
+        (void)reader.read_u16();
+
+        out_payload.clear();
+        out_payload.reserve(layout->fields.size());
+        for (usize i = 0; i < layout->fields.size(); ++i)
+        {
+            switch (layout->fields[i].codec)
+            {
+            case FieldCodec::u8_value:  out_payload.push_back(FieldValue::from_u8(reader.read_u8())); break;
+            case FieldCodec::u16_value: out_payload.push_back(FieldValue::from_u16(reader.read_u16())); break;
+            case FieldCodec::u32_value: out_payload.push_back(FieldValue::from_u32(reader.read_u32())); break;
+            case FieldCodec::i8_value:  out_payload.push_back(FieldValue::from_i8(reader.read_i8())); break;
+            case FieldCodec::i16_value: out_payload.push_back(FieldValue::from_i16(reader.read_i16())); break;
+            case FieldCodec::i32_value: out_payload.push_back(FieldValue::from_i32(reader.read_i32())); break;
+            case FieldCodec::f32_value: out_payload.push_back(FieldValue::from_f32(reader.read_f32())); break;
+            case FieldCodec::f64_value: out_payload.push_back(FieldValue::from_f64(reader.read_f64())); break;
+            case FieldCodec::string_value: out_payload.push_back(decode_string(reader, dictionary_)); break;
+            case FieldCodec::bytes_value:  out_payload.push_back(decode_bytes(reader, dictionary_)); break;
+            case FieldCodec::count: break;
+            }
+        }
+
+        out_schema_name = schema->schema_name;
+        return {SchemaRuntimeCode::ok, "Packet decoded successfully."};
+    }
+    catch (const std::out_of_range&)
+    {
+        return {SchemaRuntimeCode::decode_failed, "Packet ended before schema decode completed."};
+    }
+}
+
 SchemaRuntimeResult SchemaRuntime::receive_as(
     const std::string& expected_schema_name,
     const Buffer& packet,
@@ -543,15 +676,24 @@ SchemaRuntimeResult SchemaRuntime::receive_with_schema(
 {
     try
     {
-        BufferLease decode_packet_lease = buffer_pool_.lease();
-        Buffer& decode_packet = decode_packet_lease.get();
-        const RuntimeOptimizerResult deoptimize_result =
-            RuntimeOptimizer::deoptimize_packet(schema, packet, decode_packet);
-        if (!deoptimize_result.ok)
+        // Only lease + deoptimize if the packet is actually optimized
+        const Buffer* decode_packet = &packet;
+        std::unique_ptr<BufferLease> decode_lease;
+
+        if (optimizer_config_.enabled && RuntimeOptimizer::is_optimized_packet(packet))
         {
-            return {SchemaRuntimeCode::decode_failed, "Runtime deoptimization failed."};
+            decode_lease.reset(new BufferLease(buffer_pool_.lease()));
+            Buffer& temp = decode_lease->get();
+            const RuntimeOptimizerResult deoptimize_result =
+                RuntimeOptimizer::deoptimize_packet(schema, packet, temp);
+            if (!deoptimize_result.ok)
+            {
+                return {SchemaRuntimeCode::decode_failed, "Runtime deoptimization failed."};
+            }
+            decode_packet = &temp;
         }
 
+        // Use schema message_id for layout lookup (avoids second name hash)
         const PacketLayout* layout =
             registry_.find_layout_by_message_id(schema.message_id);
         if (layout == nullptr)
@@ -559,17 +701,19 @@ SchemaRuntimeResult SchemaRuntime::receive_with_schema(
             return {SchemaRuntimeCode::schema_invalid, "Packet layout not found for schema."};
         }
 
+#ifndef NDEBUG
         const CorruptionCheckResult corruption_check =
             CorruptionDetector::check_keydrop_packet(
-                decode_packet,
+                *decode_packet,
                 *layout
             );
         if (!corruption_check.ok)
         {
             return {SchemaRuntimeCode::corruption_detected, corruption_check.error_message};
         }
+#endif
 
-        PacketReader reader(decode_packet);
+        PacketReader reader(*decode_packet);
         (void)reader.read_u16();
 
         OrderedPayloadLease ordered_lease =
@@ -578,20 +722,30 @@ SchemaRuntimeResult SchemaRuntime::receive_with_schema(
         ordered.reserve(layout->fields.size());
         for (usize i = 0; i < layout->fields.size(); ++i)
         {
-            ordered.push_back(
-                kDecodeField[static_cast<usize>(layout->fields[i].codec)](
-                    reader,
-                    dictionary_
-                )
-            );
+            switch (layout->fields[i].codec)
+            {
+            case FieldCodec::u8_value:  ordered.push_back(FieldValue::from_u8(reader.read_u8())); break;
+            case FieldCodec::u16_value: ordered.push_back(FieldValue::from_u16(reader.read_u16())); break;
+            case FieldCodec::u32_value: ordered.push_back(FieldValue::from_u32(reader.read_u32())); break;
+            case FieldCodec::i8_value:  ordered.push_back(FieldValue::from_i8(reader.read_i8())); break;
+            case FieldCodec::i16_value: ordered.push_back(FieldValue::from_i16(reader.read_i16())); break;
+            case FieldCodec::i32_value: ordered.push_back(FieldValue::from_i32(reader.read_i32())); break;
+            case FieldCodec::f32_value: ordered.push_back(FieldValue::from_f32(reader.read_f32())); break;
+            case FieldCodec::f64_value: ordered.push_back(FieldValue::from_f64(reader.read_f64())); break;
+            case FieldCodec::string_value: ordered.push_back(decode_string(reader, dictionary_)); break;
+            case FieldCodec::bytes_value:  ordered.push_back(decode_bytes(reader, dictionary_)); break;
+            case FieldCodec::count: break;
+            }
         }
 
+#ifndef NDEBUG
         const SchemaValidationResult payload_validation =
             SchemaValidator::validate_payload_values(schema, ordered);
         if (!payload_validation.ok())
         {
             return {SchemaRuntimeCode::schema_mismatch, payload_validation.message};
         }
+#endif
 
         const FieldMapperResult mapped = FieldMapper::map_ordered_to_named(schema, ordered, out_payload);
         if (!mapped.ok())
@@ -599,10 +753,12 @@ SchemaRuntimeResult SchemaRuntime::receive_with_schema(
             return {SchemaRuntimeCode::schema_mismatch, mapped.message};
         }
 
+#ifndef NDEBUG
         if (!reader.empty())
         {
             return {SchemaRuntimeCode::corruption_detected, "Packet has trailing unread bytes."};
         }
+#endif
 
         out_schema_name = schema.schema_name;
         return {SchemaRuntimeCode::ok, "Packet decoded successfully."};

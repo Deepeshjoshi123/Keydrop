@@ -24,6 +24,7 @@ public:
     void write_bytes(const byte* data, usize size);
 
     const Buffer& buffer() const;
+    Buffer take_buffer();
     void reserve(usize capacity);
     void clear();
 

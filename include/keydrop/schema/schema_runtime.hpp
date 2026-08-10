@@ -65,6 +65,12 @@ public:
         NamedPayload& out_payload
     ) const;
 
+    SchemaRuntimeResult receive_ordered(
+        const Buffer& packet,
+        std::string& out_schema_name,
+        OrderedPayload& out_payload
+    ) const;
+
     SchemaRuntimeResult receive_as(
         const std::string& expected_schema_name,
         const Buffer& packet,
@@ -128,6 +134,11 @@ private:
     mutable StreamOptimizer stream_optimizer_;
     mutable BufferPool buffer_pool_;
     mutable PayloadPool payload_pool_;
+
+    // Fast-path cache for repeated schema lookups
+    mutable std::string cached_schema_name_;
+    mutable const SchemaDef* cached_schema_ = nullptr;
+    mutable const PacketLayout* cached_layout_ = nullptr;
 
     SchemaRuntimeResult receive_with_schema(
         const SchemaDef& schema,
