@@ -8,6 +8,12 @@ namespace keydrop {
 
 namespace {
 
+// String fields may carry a dictionary reference: 0xFFFF length marker
+// followed by a 2-byte id. Like the corruption detector and packet
+// synchronizer, the optimizer must treat it as a fixed 4-byte span, not a
+// 65535-byte string payload.
+constexpr u16 kDictionaryStringReferenceMarker = 0xFFFF;
+
 bool is_bit_set(const std::vector<byte>& bitmap, usize index)
 {
     const usize byte_index = index / 8;
@@ -93,7 +99,9 @@ RuntimeOptimizerResult RuntimeOptimizer::optimize_packet(
             }
 
             const u16 data_size = static_cast<u16>(bytes[cursor]) | (static_cast<u16>(bytes[cursor + 1]) << 8);
-            const usize total_size = static_cast<usize>(2 + data_size);
+            const bool dictionary_reference =
+                schema.fields[i].type == FieldType::string && data_size == kDictionaryStringReferenceMarker;
+            const usize total_size = dictionary_reference ? 4 : static_cast<usize>(2 + data_size);
             if (cursor + total_size > bytes.size())
             {
                 return {false, false, 0};
@@ -206,7 +214,9 @@ RuntimeOptimizerResult RuntimeOptimizer::deoptimize_packet(
             }
 
             const u16 data_size = static_cast<u16>(bytes[cursor]) | (static_cast<u16>(bytes[cursor + 1]) << 8);
-            const usize total_size = static_cast<usize>(2 + data_size);
+            const bool dictionary_reference =
+                schema.fields[i].type == FieldType::string && data_size == kDictionaryStringReferenceMarker;
+            const usize total_size = dictionary_reference ? 4 : static_cast<usize>(2 + data_size);
             if (cursor + total_size > bytes.size())
             {
                 return {false, false, 0};

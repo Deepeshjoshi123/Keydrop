@@ -1,10 +1,9 @@
 
-# Build Output
-build/
-out/
-dist/
-
-# CMake
+# Build output and CMake-generated files
+/build/
+/out/
+/dist/
+/cmake-build-*/
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
@@ -12,28 +11,53 @@ compile_commands.json
 CTestTestfile.cmake
 Makefile
 
-# Binaries
+# Compiled binaries and object files
 *.exe
 *.dll
 *.so
+*.dylib
 *.a
+*.lib
 *.o
 *.obj
+*.pdb
+*.ilk
 
-# IDE
+# Local development environment
 .vscode/
 .idea/
+*.user
+*.suo
 
-# OS
-.DS_Store
-Thumbs.db
+# Generated test, benchmark, and coverage output
+/Testing/
+/coverage/
+/benchmark-results/
+*.gcda
+*.gcno
+*.gcov
 
-# Logs
+# Research paper material and internal documentation
+/research/
+/docs/
+
+# Rendered visual assets are not part of the runnable Keydrop source
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.svg
+*.pdf
+
+# Python cache and temporary/runtime files
+__pycache__/
+*.py[cod]
 *.log
-
-# Temporary
 *.tmp
 *.temp
 
-# Internal planning docs
-docs/keydrop_integration_plan.md
+# Operating-system metadata
+.DS_Store
+Thumbs.db
+

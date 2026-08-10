@@ -35,7 +35,7 @@ u32 read_little_endian_value(
 }
 
 u32 crc32_range(
-    const std::vector<byte>& data,
+    const byte* data,
     usize begin,
     usize end
 )
@@ -196,7 +196,7 @@ CorruptionCheckResult CorruptionDetector::check_packet(
         const u32 expected_crc =
             read_little_endian_value(packet, options.crc32_offset, 4);
         const u32 actual_crc =
-            crc32_range(packet.data(), 0, options.crc32_offset);
+            crc32_range(packet.data().data(), 0, options.crc32_offset);
 
         if (expected_crc != actual_crc)
         {
@@ -375,7 +375,16 @@ CorruptionCheckResult CorruptionDetector::check_keydrop_packet(
 
 u32 CorruptionDetector::crc32(const Buffer& packet)
 {
-    return crc32_range(packet.data(), 0, packet.size());
+    return crc32_range(packet.data().data(), 0, packet.size());
+}
+
+u32 CorruptionDetector::crc32(const byte* data, usize size)
+{
+    if (size > 0 && data == nullptr)
+    {
+        return 0;
+    }
+    return crc32_range(data, 0, size);
 }
 
 }

@@ -30,6 +30,7 @@ target_sources(
         src/benchmark/benchmark_core.cpp
         src/benchmark/format_benchmark.cpp
         src/benchmark/benchmark_report.cpp
+        src/benchmark/heap_tracker.cpp
         src/platform/socket.cpp
         src/core/buffer.cpp
         src/core/buffer_pool.cpp
@@ -44,6 +45,10 @@ target_sources(
         src/schema/schema_validator.cpp
         src/schema/field_mapper.cpp
         src/schema/json_types.cpp
+        src/schema/schema_config.cpp
+        src/schema/fast_codec.cpp
+        src/schema/profiles.cpp
+        src/schema/adaptive_profiler.cpp
         src/schema/packet_layout.cpp
         src/schema/runtime_optimizer.cpp
         src/schema/adaptive_dictionary.cpp
@@ -53,6 +58,7 @@ target_sources(
         src/transport/transport.cpp
         src/transport/tcp_adapter.cpp
         src/transport/websocket_adapter.cpp
+        src/transport/udp_adapter.cpp
         src/transport/transport_config.cpp
         src/transport/transport_scheduler.cpp
 )
@@ -91,17 +97,72 @@ target_compile_options(
 
 endif()
 
-# Example
+# Legacy example (kept for CI test compatibility)
 add_executable(
     basic_encoding
     examples/basic_encoding.cpp
 )
-
 target_link_libraries(
     basic_encoding
     PRIVATE
         keydrop
 )
+
+add_executable(keydrop_cli tools/keydrop_cli.cpp)
+
+# Phase 7: official external baselines. Separate targets and study
+# classification — never conflated with the in-repository baselines.
+find_package(Protobuf QUIET)
+find_package(nlohmann_json QUIET)
+find_path(MSGPACK_INCLUDE_DIR msgpack.hpp)
+find_library(MSGPACK_LIBRARY NAMES msgpackc)
+
+set(OFFICIAL_BENCH_SOURCES
+    benchmarks/official_baselines_benchmark.cpp
+)
+
+if(Protobuf_FOUND)
+    protobuf_generate_cpp(
+        OFFICIAL_PROTO_SRCS
+        OFFICIAL_PROTO_HDRS
+        ${PROJECT_SOURCE_DIR}/benchmarks/proto/telemetry.proto
+    )
+    list(APPEND OFFICIAL_BENCH_SOURCES ${OFFICIAL_PROTO_SRCS})
+endif()
+
+add_executable(
+    official_baselines_benchmark
+    ${OFFICIAL_BENCH_SOURCES}
+)
+
+target_link_libraries(
+    official_baselines_benchmark
+    PRIVATE
+        keydrop
+)
+
+if(Protobuf_FOUND)
+    target_compile_definitions(official_baselines_benchmark PRIVATE KEYDROP_HAS_PROTOBUF)
+    target_link_libraries(official_baselines_benchmark PRIVATE protobuf::libprotobuf)
+    target_include_directories(official_baselines_benchmark PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+
+if(nlohmann_json_FOUND)
+    target_compile_definitions(official_baselines_benchmark PRIVATE KEYDROP_HAS_JSON)
+    target_link_libraries(official_baselines_benchmark PRIVATE nlohmann_json::nlohmann_json)
+endif()
+
+if(MSGPACK_INCLUDE_DIR AND MSGPACK_LIBRARY)
+    target_compile_definitions(official_baselines_benchmark PRIVATE KEYDROP_HAS_MSGPACK)
+    target_include_directories(official_baselines_benchmark PRIVATE ${MSGPACK_INCLUDE_DIR})
+    target_link_libraries(official_baselines_benchmark PRIVATE ${MSGPACK_LIBRARY})
+endif()
+
+add_test(NAME official_baselines COMMAND official_baselines_benchmark 2000)
+target_link_libraries(keydrop_cli PRIVATE keydrop)
+
+# Integration examples
+add_subdirectory(integration)
 
 # Testing
 enable_testing()
@@ -185,6 +246,45 @@ add_test(
     NAME schema_types
     COMMAND test_schema_types
 )
+
+add_executable(test_schema_config tests/test_schema_config.cpp)
+target_link_libraries(test_schema_config PRIVATE keydrop)
+add_test(NAME schema_config COMMAND test_schema_config)
+
+add_executable(test_fast_codec tests/test_fast_codec.cpp)
+target_link_libraries(test_fast_codec PRIVATE keydrop)
+add_test(NAME fast_codec COMMAND test_fast_codec)
+
+add_executable(test_delta_stream tests/test_delta_stream.cpp)
+target_link_libraries(test_delta_stream PRIVATE keydrop)
+add_test(NAME delta_stream COMMAND test_delta_stream)
+
+add_executable(test_adaptive_profiler tests/test_adaptive_profiler.cpp)
+target_link_libraries(test_adaptive_profiler PRIVATE keydrop)
+add_test(NAME adaptive_profiler COMMAND test_adaptive_profiler)
+
+add_executable(test_fuzz_reliability tests/test_fuzz_reliability.cpp)
+target_link_libraries(test_fuzz_reliability PRIVATE keydrop)
+add_test(NAME fuzz_reliability COMMAND test_fuzz_reliability)
+
+add_executable(test_compatibility tests/test_compatibility.cpp)
+target_link_libraries(test_compatibility PRIVATE keydrop)
+add_test(NAME compatibility COMMAND test_compatibility)
+
+add_executable(test_tcp_reliability tests/test_tcp_reliability.cpp)
+target_link_libraries(test_tcp_reliability PRIVATE keydrop)
+add_test(NAME tcp_reliability COMMAND test_tcp_reliability)
+set_tests_properties(tcp_reliability PROPERTIES SKIP_RETURN_CODE 77)
+
+add_executable(test_websocket_handshake tests/test_websocket_handshake.cpp)
+target_link_libraries(test_websocket_handshake PRIVATE keydrop)
+add_test(NAME websocket_handshake COMMAND test_websocket_handshake)
+set_tests_properties(websocket_handshake PROPERTIES SKIP_RETURN_CODE 77)
+
+add_executable(test_udp_adapter tests/test_udp_adapter.cpp)
+target_link_libraries(test_udp_adapter PRIVATE keydrop)
+add_test(NAME udp_adapter COMMAND test_udp_adapter)
+set_tests_properties(udp_adapter PROPERTIES SKIP_RETURN_CODE 77)
 
 add_executable(
     test_packet_layout
@@ -513,6 +613,106 @@ target_link_libraries(
         keydrop
 )
 
+add_executable(
+    fastpath_benchmark
+    benchmarks/fastpath_benchmark.cpp
+)
+
+target_link_libraries(
+    fastpath_benchmark
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME fastpath_benchmark
+    COMMAND fastpath_benchmark 20000
+)
+
+add_executable(
+    stateful_bandwidth_benchmark
+    benchmarks/stateful_bandwidth_benchmark.cpp
+)
+
+target_link_libraries(
+    stateful_bandwidth_benchmark
+    PRIVATE
+        keydrop
+)
+
+add_executable(
+    adaptive_profiles_benchmark
+    benchmarks/adaptive_profiles_benchmark.cpp
+)
+
+target_link_libraries(
+    adaptive_profiles_benchmark
+    PRIVATE
+        keydrop
+)
+
+add_executable(
+    transport_bytes_benchmark
+    benchmarks/transport_bytes_benchmark.cpp
+)
+
+target_link_libraries(
+    transport_bytes_benchmark
+    PRIVATE
+        keydrop
+)
+
+target_include_directories(
+    transport_bytes_benchmark
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/tests
+)
+
+# Tests must retain assertion checks in Release benchmark builds.  Without this,
+# NDEBUG can compile out both checks and accidental side effects inside asserts.
+set(KEYDROP_TEST_TARGETS
+    test_buffer
+    test_buffer_pool
+    test_packet_reader
+    test_encoder
+    test_schema_types
+    test_schema_config
+    test_fast_codec
+    test_delta_stream
+    test_adaptive_profiler
+    test_fuzz_reliability
+    test_compatibility
+    test_tcp_reliability
+    test_websocket_handshake
+    test_udp_adapter
+    test_packet_layout
+    test_schema_registry
+    test_schema_validator
+    test_field_mapper
+    test_payload_pool
+    test_schema_runtime
+    test_runtime_optimizer
+    test_adaptive_dictionary
+    test_stream_optimizer
+    test_corruption_detector
+    test_packet_synchronizer
+    test_transport
+    test_tcp_adapter
+    test_websocket_adapter
+    test_transport_scheduler
+    test_benchmark_core
+    test_format_benchmark
+    test_benchmark_report
+)
+
+foreach(test_target IN LISTS KEYDROP_TEST_TARGETS)
+    if(MSVC)
+        target_compile_options(${test_target} PRIVATE /UNDEBUG)
+    else()
+        target_compile_options(${test_target} PRIVATE -UNDEBUG)
+    endif()
+endforeach()
+
 # Output
 set_target_properties(
     keydrop
@@ -542,6 +742,21 @@ set_target_properties(
     test_benchmark_report
     benchmark_runner
     stream_optimizer_benchmark
+    test_schema_config
+    test_fast_codec
+    test_delta_stream
+    test_adaptive_profiler
+    test_fuzz_reliability
+    test_compatibility
+    test_tcp_reliability
+    test_websocket_handshake
+    test_udp_adapter
+    fastpath_benchmark
+    stateful_bandwidth_benchmark
+    adaptive_profiles_benchmark
+    transport_bytes_benchmark
+    official_baselines_benchmark
+    keydrop_cli
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin

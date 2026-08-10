@@ -6,6 +6,8 @@
 
 #include "keydrop/core/buffer.hpp"
 #include "keydrop/core/buffer_pool.hpp"
+#include "keydrop/schema/adaptive_profiler.hpp"
+#include "keydrop/schema/fast_codec.hpp"
 #include "keydrop/schema/field_mapper.hpp"
 #include "keydrop/schema/json_types.hpp"
 #include "keydrop/schema/adaptive_dictionary.hpp"
@@ -14,6 +16,7 @@
 #include "keydrop/schema/schema_registry.hpp"
 #include "keydrop/schema/schema_validator.hpp"
 #include "keydrop/schema/stream_optimizer.hpp"
+#include "keydrop/reliability/corruption_detector.hpp"
 
 namespace keydrop {
 
@@ -59,10 +62,36 @@ public:
         Buffer& out_packet
     ) const;
 
+    // Stateless fast path (Phase 2). encode writes into out_packet, reusing
+    // its reserved capacity; decode returns borrowed BufferView fields that
+    // remain valid while `packet` is alive. The fast path skips the generic
+    // validation walk, so use it for trusted, schema-known data; the general
+    // send/receive paths remain available for dynamic or untrusted inputs.
+    SchemaRuntimeResult fast_encode(
+        const std::string& schema_name,
+        const FieldValue* values,
+        usize count,
+        Buffer& out_packet
+    ) const;
+
+    SchemaRuntimeResult fast_decode(
+        const Buffer& packet,
+        std::string& out_schema_name,
+        FastDecodedField* out_fields,
+        usize max_fields,
+        usize& out_count
+    ) const;
+
     SchemaRuntimeResult receive(
         const Buffer& packet,
         std::string& out_schema_name,
         NamedPayload& out_payload
+    ) const;
+
+    SchemaRuntimeResult receive_ordered(
+        const Buffer& packet,
+        std::string& out_schema_name,
+        OrderedPayload& out_payload
     ) const;
 
     SchemaRuntimeResult receive_as(
@@ -106,6 +135,10 @@ public:
         usize& out_skipped_bytes
     ) const;
 
+    // Phase 3: emit a dictionary-reset control packet for the peer.
+    // receive_stream() recognizes it and resets the local dictionary.
+    SchemaRuntimeResult send_dictionary_reset(Buffer& out_packet) const;
+
     const SchemaRegistry& registry() const;
     void set_optimizer_config(const RuntimeOptimizerConfig& config);
     const RuntimeOptimizerConfig& optimizer_config() const;
@@ -121,13 +154,46 @@ public:
     const PayloadPoolConfig& payload_pool_config() const;
     void reset_memory_pools();
 
+    // Phase 4: adaptive profiles. The profiler observes outgoing payloads
+    // and applies the predefined decision rules at window boundaries. It
+    // never overrides a component the user configured explicitly.
+    void set_adaptive_config(const AdaptiveProfilerConfig& config);
+    const AdaptiveProfilerConfig& adaptive_config() const;
+    void reset_adaptive_profiler();
+
+    // Phase 5: reliability settings (CRC32 stream envelopes, decoder
+    // memory limits).
+    void set_reliability_config(const ReliabilityConfig& config);
+    const ReliabilityConfig& reliability_config() const;
+    bool dictionary_explicit() const;
+    bool optimizer_explicit() const;
+    bool stream_explicit() const;
+
+    // Applies optimization settings (profile or adaptive decisions) without
+    // marking components as explicitly configured.
+    void apply_optimization_settings(
+        const AdaptiveDictionaryConfig& dictionary,
+        const RuntimeOptimizerConfig& optimizer,
+        const StreamOptimizerConfig& stream
+    ) const;
+
 private:
     SchemaRegistry registry_;
-    RuntimeOptimizerConfig optimizer_config_;
+    mutable RuntimeOptimizerConfig optimizer_config_;
     mutable AdaptiveDictionary dictionary_;
     mutable StreamOptimizer stream_optimizer_;
     mutable BufferPool buffer_pool_;
     mutable PayloadPool payload_pool_;
+    mutable AdaptiveProfiler adaptive_profiler_;
+    ReliabilityConfig reliability_config_;
+    bool dictionary_explicit_ = false;
+    bool optimizer_explicit_ = false;
+    bool stream_explicit_ = false;
+
+    // Fast-path cache for repeated schema lookups
+    mutable std::string cached_schema_name_;
+    mutable const SchemaDef* cached_schema_ = nullptr;
+    mutable const PacketLayout* cached_layout_ = nullptr;
 
     SchemaRuntimeResult receive_with_schema(
         const SchemaDef& schema,

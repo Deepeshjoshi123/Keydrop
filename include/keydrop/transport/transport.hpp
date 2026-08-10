@@ -9,7 +9,8 @@ namespace keydrop {
 
 enum class TransportKind {
     tcp,
-    websocket
+    websocket,
+    udp
 };
 
 enum class ConnectionState {

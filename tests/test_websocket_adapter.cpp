@@ -61,7 +61,8 @@ int main()
         assert(received.packet.read(1) == 0xBB);
 
         Buffer reply = make_packet({0x11});
-        assert(server.send(reply).ok());
+        const TransportResult send_reply = server.send(reply);
+        assert(send_reply.ok());
         server_done = true;
     });
 

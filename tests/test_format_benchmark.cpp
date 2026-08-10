@@ -62,10 +62,16 @@ int main()
     assert(protobuf_sample.packet_size_bytes == protobuf.bytes.size());
     assert(messagepack_sample.packet_size_bytes == messagepack.bytes.size());
 
-    assert(keydrop_sample.allocations == iterations);
-    assert(json_sample.allocations == iterations);
-    assert(protobuf_sample.allocations == iterations);
-    assert(messagepack_sample.allocations == iterations);
+    // HeapTracker now captures real gross heap allocation activity during the
+    // encode window, rather than one logical packet allocation per iteration.
+    assert(keydrop_sample.allocations > 0);
+    assert(json_sample.allocations > 0);
+    assert(protobuf_sample.allocations > 0);
+    assert(messagepack_sample.allocations > 0);
+    assert(keydrop_sample.allocated_bytes > 0);
+    assert(json_sample.allocated_bytes > 0);
+    assert(protobuf_sample.allocated_bytes > 0);
+    assert(messagepack_sample.allocated_bytes > 0);
 
     const std::vector<BenchmarkSample> samples = run_format_benchmarks(iterations);
     assert(samples.size() == 4);

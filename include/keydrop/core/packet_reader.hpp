@@ -22,7 +22,15 @@ public:
     f32 read_f32();
     f64 read_f64();
     std::string read_string();
+    std::string read_string_from_size(u16 size);
     std::vector<byte> read_bytes(usize size);
+
+    // Advance the cursor without copying (bounds-checked).
+    void skip(usize size);
+
+    // The buffer being read. Combined with skip() and slice() this enables
+    // zero-copy decoding of string/bytes fields as BufferView values.
+    const Buffer& buffer() const;
 
     void reset();
     usize position() const;
