@@ -9,6 +9,8 @@ and minimal gridlines per IEEE manuscript conventions.
 from __future__ import annotations
 
 import csv
+import hashlib
+import json
 import os
 from pathlib import Path
 
@@ -19,9 +21,6 @@ import numpy as np
 
 
 ROOT = Path(__file__).resolve().parents[3]
-PROCESSED_DIR = ROOT / "research" / "benchmark" / "processed"
-GRAPH_DIR = ROOT / "research" / "benchmark" / "graphs"
-
 # (filename_prefix, column, y_label)
 GRAPH_SPECS = [
     ("packet_size_comparison",    "packet_size_bytes_mean",          "Packet Size (bytes)"),
@@ -66,12 +65,20 @@ def _setup_ieee_style() -> None:
     })
 
 
-def read_format_summary() -> list[dict[str, str]]:
-    path = PROCESSED_DIR / "format_summary.csv"
+def read_format_summary(processed_dir: Path) -> tuple[Path, list[dict[str, str]]]:
+    path = processed_dir / "format_summary.csv"
     if not path.exists():
         raise SystemExit(f"missing processed data: {path}")
     with path.open(newline="", encoding="utf-8") as handle:
-        return list(csv.DictReader(handle))
+        return path, list(csv.DictReader(handle))
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _round_tick_step(max_val: float) -> float:
@@ -158,9 +165,24 @@ def _make_ieee_bar_chart(
 
 
 def main() -> int:
-    GRAPH_DIR.mkdir(parents=True, exist_ok=True)
-    rows = read_format_summary()
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--study", required=True, type=Path)
+    args = parser.parse_args()
+
+    study_dir = args.study.resolve()
+    manifest_path = study_dir / "manifest.json"
+    if not manifest_path.exists():
+        parser.error(f"study manifest does not exist: {manifest_path}")
+    processed_dir = study_dir / "processed"
+    graph_dir = study_dir / "graphs"
+    graph_dir.mkdir(parents=True, exist_ok=True)
+    summary_path, rows = read_format_summary(processed_dir)
+    if not rows:
+        raise SystemExit(f"processed summary is empty: {summary_path}")
     labels = [row["format"] for row in rows]
+    generated: list[str] = []
 
     for filename, metric, y_label in GRAPH_SPECS:
         if metric not in rows[0]:
@@ -169,10 +191,11 @@ def main() -> int:
         values = [float(row[metric]) for row in rows]
         _make_ieee_bar_chart(
             labels, values, y_label,
-            svg_path=GRAPH_DIR / f"{filename}.svg",
-            png_path=GRAPH_DIR / f"{filename}.png",
-            pdf_path=GRAPH_DIR / f"{filename}.pdf",
+            svg_path=graph_dir / f"{filename}.svg",
+            png_path=graph_dir / f"{filename}.png",
+            pdf_path=graph_dir / f"{filename}.pdf",
         )
+        generated.extend([f"{filename}.svg", f"{filename}.png", f"{filename}.pdf"])
         print(f"wrote {filename}.{{svg,png,pdf}}")
 
     # Payload reduction relative to JSON
@@ -186,11 +209,29 @@ def main() -> int:
             reduction_vals.append(reduction)
         _make_ieee_bar_chart(
             labels, reduction_vals, "Size Reduction vs JSON (%)",
-            svg_path=GRAPH_DIR / "payload_reduction.svg",
-            png_path=GRAPH_DIR / "payload_reduction.png",
-            pdf_path=GRAPH_DIR / "payload_reduction.pdf",
+            svg_path=graph_dir / "payload_reduction.svg",
+            png_path=graph_dir / "payload_reduction.png",
+            pdf_path=graph_dir / "payload_reduction.pdf",
         )
+        generated.extend(["payload_reduction.svg", "payload_reduction.png", "payload_reduction.pdf"])
         print("wrote payload_reduction.{svg,png,pdf}")
+
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    (graph_dir / "provenance.json").write_text(
+        json.dumps(
+            {
+                "study_id": manifest.get("study_id"),
+                "source_commit": manifest.get("source", {}).get("commit"),
+                "processed_input": str(summary_path.relative_to(study_dir)),
+                "processed_input_sha256": sha256(summary_path),
+                "plotter": str(Path(__file__).relative_to(ROOT)),
+                "generated_files": generated,
+            },
+            indent=2,
+            sort_keys=True,
+        ) + "\n",
+        encoding="utf-8",
+    )
 
     return 0
 

@@ -1,20 +1,29 @@
 # Benchmark Workspace
 
-This directory separates generated data from source scripts.
+`studies/` is the source of truth for reproducible results. Each study is
+immutable and includes its manifest, Release test result, raw trials, processed
+summaries, and graphs. Create one from the repository root:
 
-- `scripts/`: reproducible benchmark, parsing, processing, plotting, and diagram helpers.
-- `raw_data/`: raw CSV files from benchmark runs.
-- `processed/`: aggregated CSV files derived from raw data.
-- `graphs/`: generated PNG and SVG figures.
-
-Run from the repository root:
-
-```powershell
-python research\datasets\generate_datasets.py
-python research\benchmark\scripts\run_benchmarks.py --build-dir build\research --iterations 1000 --trials 30
-python research\benchmark\scripts\process_results.py
-python research\benchmark\scripts\plot_graphs.py
-python research\diagrams\generate_diagrams.py
+```bash
+python3 research/benchmark/scripts/run_study.py \
+  --study-id phase0-linux-20260817 \
+  --build-dir build/research \
+  --iterations 100000 \
+  --trials 30
 ```
 
-The scripts do not invent missing results. If raw CSV files are absent, processing or plotting exits with a clear error.
+The runner performs configure → build → complete CTest → benchmark → process →
+plot. It stops before benchmarking when the Release test gate fails. A study
+must have at least 30 trials, cannot overwrite an earlier study, and requires
+a clean worktree unless explicitly marked as a development-only run.
+
+- `scripts/`: study runner, raw capture, processing, and plotting code.
+- `studies/`: complete, manifest-backed evidence packages.
+- `raw_data/`, `processed/`, `graphs/`: preserved legacy artifacts only; see
+  [legacy_data_status.md](legacy_data_status.md).
+
+The current format baselines are explicitly **in-repository development
+encoders**, not official third-party library measurements. Do not merge their
+results with future official-library studies. See
+[official_baselines.md](official_baselines.md) for the separate external-suite
+requirements.

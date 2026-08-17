@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
-"""Run Keydrop benchmark executables and capture raw CSV."""
+"""Run Keydrop benchmark executables and capture raw CSV for one study."""
 
 from __future__ import annotations
 
 import argparse
 import csv
-import platform
 import re
 import subprocess
-from datetime import datetime, timezone
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-RAW_DIR = ROOT / "research" / "benchmark" / "raw_data"
 
 
 def exe_path(build_dir: Path, name: str) -> Path:
@@ -73,27 +70,28 @@ def main() -> int:
     parser.add_argument("--iterations", type=int, default=1000)
     parser.add_argument("--trials", type=int, default=30)
     parser.add_argument("--skip-stream", action="store_true")
+    parser.add_argument("--output-dir", required=True, help="empty study raw-output directory")
     args = parser.parse_args()
 
-    build_dir = (ROOT / args.build_dir).resolve()
+    if args.iterations <= 0 or args.trials <= 0:
+        parser.error("--iterations and --trials must be positive")
+
+    build_dir = Path(args.build_dir).resolve()
+    output_dir = Path(args.output_dir).resolve()
+    if output_dir.exists() and any(output_dir.iterdir()):
+        parser.error(f"output directory must be empty: {output_dir}")
+    output_dir.mkdir(parents=True, exist_ok=True)
     benchmark_runner = exe_path(build_dir, "benchmark_runner")
     stream_runner = exe_path(build_dir, "stream_optimizer_benchmark")
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    metadata = {
-        "timestamp_utc": timestamp,
-        "system": platform.system(),
-        "machine": platform.machine(),
-        "processor": platform.processor(),
-        "python": platform.python_version(),
-        "iterations": args.iterations,
-    }
+    metadata = {"iterations": args.iterations}
 
     format_rows: list[dict[str, object]] = []
     stream_rows: list[dict[str, object]] = []
 
     for trial in range(args.trials):
-        report_path = RAW_DIR / f"format_report_trial_{trial}.txt"
+        report_path = output_dir / "reports" / f"format_report_trial_{trial:03d}.txt"
+        report_path.parent.mkdir(parents=True, exist_ok=True)
         result = subprocess.run(
             [str(benchmark_runner), str(args.iterations), str(report_path)],
             cwd=ROOT,
@@ -114,9 +112,11 @@ def main() -> int:
             )
             stream_rows.append({"trial": trial, **metadata, **parse_key_values(stream.stdout)})
 
-    write_rows(RAW_DIR / f"format_benchmark_{timestamp}.csv", format_rows)
+    if not format_rows:
+        raise RuntimeError("benchmark runner emitted no parseable format rows")
+    write_rows(output_dir / "format_trials.csv", format_rows)
     if stream_rows:
-        write_rows(RAW_DIR / f"stream_optimizer_{timestamp}.csv", stream_rows)
+        write_rows(output_dir / "stream_trials.csv", stream_rows)
 
     return 0
 

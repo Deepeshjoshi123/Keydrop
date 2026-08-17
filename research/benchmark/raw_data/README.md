@@ -1,3 +1,6 @@
-# Raw Data
+# Legacy Raw Data
 
-Place generated raw benchmark CSV files here. Do not edit these files by hand.
+This folder is retained as historical development data. New benchmark output
+must be written by `research/benchmark/scripts/run_study.py` into a new
+manifest-backed directory under `../studies/`. Do not edit either raw output by
+hand.

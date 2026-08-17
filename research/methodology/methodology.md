@@ -18,20 +18,27 @@ For every benchmark run, record:
 
 ## Build Configuration
 
-Use a clean Release build:
+Create an immutable study, which configures a Release build, runs the complete
+CTest suite before collecting data, captures the manifest, and retains all
+outputs together:
 
-```powershell
-cmake -S . -B build/research -DCMAKE_BUILD_TYPE=Release
-cmake --build build/research --parallel
-ctest --test-dir build/research --output-on-failure
+```bash
+python3 research/benchmark/scripts/run_study.py \
+  --study-id phase0-<platform>-<date> \
+  --build-dir build/research \
+  --iterations 100000 \
+  --trials 30
 ```
 
-For Visual Studio generators, include `-C Release` when running tests and executables.
+The manifest records the commands, source revision, worktree state,
+environment, and output paths. A study ID cannot be reused. Trusted studies
+require a clean worktree; `--allow-dirty` creates a development-only study that
+must not support a reported result.
 
 ## Benchmark Procedure
 
-1. Build the project in Release mode.
-2. Run the full unit test suite.
+1. Configure and build the project in Release mode.
+2. Run the full CTest suite and retain its log.
 3. Run a warm-up benchmark pass and discard it.
 4. Run at least 30 repeated trials per workload.
 5. Store each trial as raw CSV.
@@ -60,7 +67,8 @@ Report mean, standard deviation, minimum, maximum, and sample count. Avoid drawi
 ## Reproducibility Rules
 
 - Never edit raw data by hand.
-- Keep raw data, processed data, and graph scripts under `research/benchmark/`.
-- Every graph must be regenerable from CSV files.
+- Keep the manifest, raw data, processed data, test log, and graph scripts in
+  one `research/benchmark/studies/<study-id>/` package.
+- Every graph must be regenerable from the selected study's processed CSV.
 - Every numerical claim in the paper must cite a generated table or figure.
 - When a measurement is unavailable, report it as unavailable rather than estimating it.

@@ -99,7 +99,7 @@ The transport interface defines connect, listen, close, send, and receive operat
 
 ## 12. Memory Management
 
-`Buffer` owns a `std::vector<byte>`. `BufferView` provides non-owning views and slices. `BufferPool` reuses `Buffer` instances through RAII leases, and `PayloadPool` reuses ordered and named payload containers. The in-repo allocation tracker records logical allocations in the benchmark loop, not global heap allocations.
+`Buffer` owns a `std::vector<byte>`. `BufferView` provides non-owning views and slices. `BufferPool` reuses `Buffer` instances through RAII leases, and `PayloadPool` reuses ordered and named payload containers. The in-repo allocation tracker uses thread-local counters and global `new`/`delete` overrides while the encode timing window is active. It records gross heap allocation activity in that process window; it is not a measure of total process memory, peak resident memory, or retained allocations.
 
 ## 13. Cross Platform Design
 
@@ -107,7 +107,7 @@ The repository uses CMake and C++17. Platform socket differences are isolated in
 
 ## 14. Experimental Methodology
 
-Experiments should use Release builds, fixed CPU/power settings where possible, warm-up runs, repeated trials, raw CSV capture, processed summary generation, and graph scripts. See `research/methodology/methodology.md`.
+Experiments should use manifest-backed Release studies, fixed CPU/power settings where possible, warm-up runs, repeated trials, raw CSV capture, processed summary generation, and graph scripts. See `research/methodology/methodology.md`.
 
 ## 15. Benchmark Design
 
@@ -126,15 +126,15 @@ Workloads should include temperature, humidity, GPS, vehicle telemetry, IoT moni
 
 ## 16. Experimental Results
 
-Placeholder. Do not add numerical claims here until `research/benchmark/raw_data/*.csv` has been generated and processed.
+Placeholder. Do not add numerical claims here until a manifest-backed study in `research/benchmark/studies/` has generated and processed its raw CSV files.
 
 Expected generated artifacts:
 
-- `research/benchmark/raw_data/format_benchmark_*.csv`
-- `research/benchmark/raw_data/stream_optimizer_*.csv`
-- `research/benchmark/processed/summary.csv`
-- `research/benchmark/graphs/*.png`
-- `research/benchmark/graphs/*.svg`
+- `research/benchmark/studies/<study-id>/manifest.json`
+- `research/benchmark/studies/<study-id>/raw/format_trials.csv`
+- `research/benchmark/studies/<study-id>/raw/stream_trials.csv`
+- `research/benchmark/studies/<study-id>/processed/*.csv`
+- `research/benchmark/studies/<study-id>/graphs/*.{png,svg,pdf}`
 
 ## 17. Discussion
 
@@ -144,7 +144,7 @@ The implementation is strongest where telemetry messages are small, schema-known
 
 - Current format benchmarks use simplified in-repo baselines, not official Protocol Buffers or MessagePack libraries.
 - FlatBuffers and Cap'n Proto are not implemented in the repository benchmark.
-- Allocation tracking measures logical packet allocations recorded by benchmark code, not full process heap activity.
+- Allocation tracking measures gross heap-allocation activity only during the encode timing window, not total process memory.
 - The WebSocket adapter should not be described as a complete WebSocket protocol implementation without additional evidence.
 - No benchmark numbers are present until experiments are run.
 - Security properties such as authentication, encryption, replay protection, and adversarial fuzzing are outside the current implementation.

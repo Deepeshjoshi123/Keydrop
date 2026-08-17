@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
-"""Aggregate raw Keydrop benchmark CSV files into processed summaries."""
+"""Aggregate one immutable Keydrop benchmark study into summaries."""
 
 from __future__ import annotations
 
 import csv
+import hashlib
+import json
 import statistics
 from collections import defaultdict
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-RAW_DIR = ROOT / "research" / "benchmark" / "raw_data"
-PROCESSED_DIR = ROOT / "research" / "benchmark" / "processed"
-
-
 FORMAT_METRICS = [
     "packet_size_bytes",
     "encode_latency_ns",
@@ -33,12 +31,19 @@ STREAM_METRICS = [
 ]
 
 
-def read_csvs(pattern: str) -> list[dict[str, str]]:
-    rows: list[dict[str, str]] = []
-    for path in sorted(RAW_DIR.glob(pattern)):
-        with path.open(newline="", encoding="utf-8") as handle:
-            rows.extend(csv.DictReader(handle))
-    return rows
+def read_csv(path: Path) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    with path.open(newline="", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def aggregate(rows: list[dict[str, str]], group_key: str, metrics: list[str]) -> list[dict[str, object]]:
@@ -74,15 +79,30 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
 
 
 def main() -> int:
-    format_rows = read_csvs("format_benchmark_*.csv")
-    stream_rows = read_csvs("stream_optimizer_*.csv")
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--study", required=True, type=Path)
+    args = parser.parse_args()
+
+    study_dir = args.study.resolve()
+    manifest_path = study_dir / "manifest.json"
+    if not manifest_path.exists():
+        parser.error(f"study manifest does not exist: {manifest_path}")
+
+    raw_dir = study_dir / "raw"
+    processed_dir = study_dir / "processed"
+    format_path = raw_dir / "format_trials.csv"
+    stream_path = raw_dir / "stream_trials.csv"
+    format_rows = read_csv(format_path)
+    stream_rows = read_csv(stream_path)
 
     if not format_rows and not stream_rows:
-        raise SystemExit(f"no raw benchmark CSV files found in {RAW_DIR}")
+        raise SystemExit(f"no raw benchmark CSV files found in {raw_dir}")
 
     if format_rows:
         write_csv(
-            PROCESSED_DIR / "format_summary.csv",
+            processed_dir / "format_summary.csv",
             aggregate(format_rows, "format", FORMAT_METRICS),
         )
 
@@ -90,9 +110,24 @@ def main() -> int:
         for row in stream_rows:
             row["benchmark"] = "stream_optimizer"
         write_csv(
-            PROCESSED_DIR / "stream_optimizer_summary.csv",
+            processed_dir / "stream_optimizer_summary.csv",
             aggregate(stream_rows, "benchmark", STREAM_METRICS),
         )
+
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    provenance = {
+        "study_id": manifest.get("study_id"),
+        "source_commit": manifest.get("source", {}).get("commit"),
+        "raw_inputs": {
+            str(format_path.relative_to(study_dir)): sha256(format_path) if format_path.exists() else None,
+            str(stream_path.relative_to(study_dir)): sha256(stream_path) if stream_path.exists() else None,
+        },
+        "processor": str(Path(__file__).relative_to(ROOT)),
+    }
+    processed_dir.mkdir(parents=True, exist_ok=True)
+    (processed_dir / "provenance.json").write_text(
+        json.dumps(provenance, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
     return 0
 
