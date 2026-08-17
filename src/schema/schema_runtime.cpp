@@ -348,14 +348,12 @@ SchemaRuntimeResult encode_ordered_with_schema(
     Buffer& out_packet
 )
 {
-#ifndef NDEBUG
     const SchemaValidationResult payload_validation =
         SchemaValidator::validate_payload_values(schema, ordered_payload);
     if (!payload_validation.ok())
     {
         return {SchemaRuntimeCode::schema_mismatch, payload_validation.message};
     }
-#endif
 
     Encoder encoder;
     encoder.reserve(estimate_encoded_packet_size(layout, ordered_payload));
@@ -701,7 +699,6 @@ SchemaRuntimeResult SchemaRuntime::receive_with_schema(
             return {SchemaRuntimeCode::schema_invalid, "Packet layout not found for schema."};
         }
 
-#ifndef NDEBUG
         const CorruptionCheckResult corruption_check =
             CorruptionDetector::check_keydrop_packet(
                 *decode_packet,
@@ -711,7 +708,6 @@ SchemaRuntimeResult SchemaRuntime::receive_with_schema(
         {
             return {SchemaRuntimeCode::corruption_detected, corruption_check.error_message};
         }
-#endif
 
         PacketReader reader(*decode_packet);
         (void)reader.read_u16();
@@ -738,14 +734,12 @@ SchemaRuntimeResult SchemaRuntime::receive_with_schema(
             }
         }
 
-#ifndef NDEBUG
         const SchemaValidationResult payload_validation =
             SchemaValidator::validate_payload_values(schema, ordered);
         if (!payload_validation.ok())
         {
             return {SchemaRuntimeCode::schema_mismatch, payload_validation.message};
         }
-#endif
 
         const FieldMapperResult mapped = FieldMapper::map_ordered_to_named(schema, ordered, out_payload);
         if (!mapped.ok())
@@ -753,12 +747,10 @@ SchemaRuntimeResult SchemaRuntime::receive_with_schema(
             return {SchemaRuntimeCode::schema_mismatch, mapped.message};
         }
 
-#ifndef NDEBUG
         if (!reader.empty())
         {
             return {SchemaRuntimeCode::corruption_detected, "Packet has trailing unread bytes."};
         }
-#endif
 
         out_schema_name = schema.schema_name;
         return {SchemaRuntimeCode::ok, "Packet decoded successfully."};

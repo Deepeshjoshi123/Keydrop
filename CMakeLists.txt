@@ -516,6 +516,42 @@ target_link_libraries(
         keydrop
 )
 
+# Tests must retain assertion checks in Release benchmark builds.  Without this,
+# NDEBUG can compile out both checks and accidental side effects inside asserts.
+set(KEYDROP_TEST_TARGETS
+    test_buffer
+    test_buffer_pool
+    test_packet_reader
+    test_encoder
+    test_schema_types
+    test_packet_layout
+    test_schema_registry
+    test_schema_validator
+    test_field_mapper
+    test_payload_pool
+    test_schema_runtime
+    test_runtime_optimizer
+    test_adaptive_dictionary
+    test_stream_optimizer
+    test_corruption_detector
+    test_packet_synchronizer
+    test_transport
+    test_tcp_adapter
+    test_websocket_adapter
+    test_transport_scheduler
+    test_benchmark_core
+    test_format_benchmark
+    test_benchmark_report
+)
+
+foreach(test_target IN LISTS KEYDROP_TEST_TARGETS)
+    if(MSVC)
+        target_compile_options(${test_target} PRIVATE /UNDEBUG)
+    else()
+        target_compile_options(${test_target} PRIVATE -UNDEBUG)
+    endif()
+endforeach()
+
 # Output
 set_target_properties(
     keydrop
