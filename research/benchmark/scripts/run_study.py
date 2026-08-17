@@ -25,9 +25,10 @@ STUDIES_DIR = ROOT / "research" / "benchmark" / "studies"
 
 
 def run(
-    command: list[str], *, cwd: Path, log_path: Path, environment: dict[str, str]
+    command: list[str], *, cwd: Path, log_path: Path, environment: dict[str, str], label: str
 ) -> subprocess.CompletedProcess[str]:
     """Run a command, preserving its exact output and invocation."""
+    print(f"[{label}] running: {shlex.join(command)}", flush=True)
     result = subprocess.run(
         command, cwd=cwd, env=environment, text=True, capture_output=True, check=False
     )
@@ -38,6 +39,7 @@ def run(
         + f"\n[exit_code]\n{result.returncode}\n",
         encoding="utf-8",
     )
+    print(f"[{label}] exit code {result.returncode}; log: {log_path}", flush=True)
     return result
 
 
@@ -119,7 +121,7 @@ def main() -> int:
     if args.generator:
         configure.extend(["-G", args.generator])
     build = ["cmake", "--build", str(build_dir), "--parallel"]
-    test = ["ctest", "--test-dir", str(build_dir), "--output-on-failure"]
+    test = ["ctest", "--test-dir", str(build_dir), "--output-on-failure", "--timeout", "60"]
 
     study_dir.mkdir(parents=True)
     manifest_path = study_dir / "manifest.json"
@@ -174,7 +176,11 @@ def main() -> int:
     write_manifest(manifest_path, manifest)
 
     configure_result = run(
-        configure, cwd=ROOT, log_path=study_dir / "build" / "configure.log", environment=command_environment
+        configure,
+        cwd=ROOT,
+        log_path=study_dir / "build" / "configure.log",
+        environment=command_environment,
+        label="configure",
     )
     if configure_result.returncode != 0:
         manifest["status"] = "configure_failed"
@@ -182,7 +188,11 @@ def main() -> int:
         return configure_result.returncode
 
     build_result = run(
-        build, cwd=ROOT, log_path=study_dir / "build" / "build.log", environment=command_environment
+        build,
+        cwd=ROOT,
+        log_path=study_dir / "build" / "build.log",
+        environment=command_environment,
+        label="build",
     )
     if build_result.returncode != 0:
         manifest["status"] = "build_failed"
@@ -190,7 +200,11 @@ def main() -> int:
         return build_result.returncode
 
     test_result = run(
-        test, cwd=ROOT, log_path=study_dir / "test" / "ctest.log", environment=command_environment
+        test,
+        cwd=ROOT,
+        log_path=study_dir / "test" / "ctest.log",
+        environment=command_environment,
+        label="test",
     )
     if test_result.returncode != 0:
         manifest["status"] = "test_failed"
@@ -198,7 +212,11 @@ def main() -> int:
         return test_result.returncode
 
     benchmark_result = run(
-        command, cwd=ROOT, log_path=study_dir / "raw" / "runner.log", environment=command_environment
+        command,
+        cwd=ROOT,
+        log_path=study_dir / "raw" / "runner.log",
+        environment=command_environment,
+        label="benchmark",
     )
     if benchmark_result.returncode != 0:
         manifest["status"] = "benchmark_failed"
@@ -210,6 +228,7 @@ def main() -> int:
         cwd=ROOT,
         log_path=study_dir / "processed" / "process.log",
         environment=command_environment,
+        label="process",
     )
     if process_result.returncode != 0:
         manifest["status"] = "processing_failed"
@@ -221,6 +240,7 @@ def main() -> int:
         cwd=ROOT,
         log_path=study_dir / "graphs" / "plot.log",
         environment=command_environment,
+        label="plot",
     )
     manifest["status"] = "complete" if plot_result.returncode == 0 else "plot_failed"
     write_manifest(manifest_path, manifest)
