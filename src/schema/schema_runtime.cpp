@@ -491,7 +491,7 @@ SchemaRuntimeResult SchemaRuntime::send(
         return {SchemaRuntimeCode::mapping_failed, mapped.message};
     }
 
-    return encode_ordered_with_schema(
+    const SchemaRuntimeResult result = encode_ordered_with_schema(
         *schema,
         *layout,
         ordered_payload,
@@ -500,6 +500,14 @@ SchemaRuntimeResult SchemaRuntime::send(
         buffer_pool_,
         out_packet
     );
+
+    if (result.ok())
+    {
+        adaptive_profiler_.observe(schema_name, payload);
+        adaptive_profiler_.maybe_apply(*this);
+    }
+
+    return result;
 }
 
 SchemaRuntimeResult SchemaRuntime::send_ordered(
@@ -857,6 +865,7 @@ const SchemaRegistry& SchemaRuntime::registry() const
 void SchemaRuntime::set_optimizer_config(const RuntimeOptimizerConfig& config)
 {
     optimizer_config_ = config;
+    optimizer_explicit_ = true;
 }
 
 const RuntimeOptimizerConfig& SchemaRuntime::optimizer_config() const
@@ -867,6 +876,7 @@ const RuntimeOptimizerConfig& SchemaRuntime::optimizer_config() const
 void SchemaRuntime::set_dictionary_config(const AdaptiveDictionaryConfig& config)
 {
     dictionary_.configure(config);
+    dictionary_explicit_ = true;
 }
 
 const AdaptiveDictionaryConfig& SchemaRuntime::dictionary_config() const
@@ -1133,11 +1143,61 @@ SchemaRuntimeResult SchemaRuntime::send_dictionary_reset(Buffer& out_packet) con
 void SchemaRuntime::set_stream_optimizer_config(const StreamOptimizerConfig& config)
 {
     stream_optimizer_.configure(config);
+    stream_explicit_ = true;
 }
 
 const StreamOptimizerConfig& SchemaRuntime::stream_optimizer_config() const
 {
     return stream_optimizer_.config();
+}
+
+void SchemaRuntime::set_adaptive_config(const AdaptiveProfilerConfig& config)
+{
+    adaptive_profiler_.configure(config);
+}
+
+const AdaptiveProfilerConfig& SchemaRuntime::adaptive_config() const
+{
+    return adaptive_profiler_.config();
+}
+
+void SchemaRuntime::reset_adaptive_profiler()
+{
+    adaptive_profiler_.reset();
+}
+
+bool SchemaRuntime::dictionary_explicit() const
+{
+    return dictionary_explicit_;
+}
+
+bool SchemaRuntime::optimizer_explicit() const
+{
+    return optimizer_explicit_;
+}
+
+bool SchemaRuntime::stream_explicit() const
+{
+    return stream_explicit_;
+}
+
+void SchemaRuntime::apply_optimization_settings(
+    const AdaptiveDictionaryConfig& dictionary,
+    const RuntimeOptimizerConfig& optimizer,
+    const StreamOptimizerConfig& stream
+) const
+{
+    const bool delta_toggled = stream_optimizer_.config().enable_delta_packets != stream.enable_delta_packets;
+    dictionary_.configure(dictionary);
+    optimizer_config_ = optimizer;
+    stream_optimizer_.configure(stream);
+    if (delta_toggled)
+    {
+        // Force a keyframe on the next emission (queued batches are kept).
+        // This closes the stale-base window where a delta could otherwise
+        // be accepted after packets were dropped while delta mode was off.
+        stream_optimizer_.reset_delta_state();
+    }
 }
 
 void SchemaRuntime::reset_stream_optimizer()

@@ -56,6 +56,12 @@ public:
     bool flush_batched(Buffer& out_packet);
     bool expand_incoming(const Buffer& packet, std::deque<Buffer>& out_packets) const;
 
+    // Clears delta-mode state only (keeps queued batch packets). After a
+    // call, the next emission for any schema is a full keyframe, which
+    // resynchronizes receivers. Used when adaptive decisions toggle the
+    // delta mode.
+    void reset_delta_state();
+
     // Phase 3 delta expansion. Pure read of receiver state: it rebuilds the
     // full stateless packet from the last decoded payload for the schema.
     // Returns false when the packet is not a valid delta for the current

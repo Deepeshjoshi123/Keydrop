@@ -60,4 +60,8 @@ std::string format_json_object(const JsonObject& object);
 
 SchemaConfigResult register_configured_schema(SchemaRuntime& runtime, const ConfiguredSchema& schema);
 
+// Phase 4: applies the schema's named profile (and adaptive refinement,
+// where the profile enables it) to the runtime.
+SchemaConfigResult apply_configured_profile(SchemaRuntime& runtime, const ConfiguredSchema& schema);
+
 } // namespace keydrop

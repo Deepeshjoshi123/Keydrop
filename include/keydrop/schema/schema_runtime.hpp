@@ -6,6 +6,7 @@
 
 #include "keydrop/core/buffer.hpp"
 #include "keydrop/core/buffer_pool.hpp"
+#include "keydrop/schema/adaptive_profiler.hpp"
 #include "keydrop/schema/fast_codec.hpp"
 #include "keydrop/schema/field_mapper.hpp"
 #include "keydrop/schema/json_types.hpp"
@@ -152,13 +153,35 @@ public:
     const PayloadPoolConfig& payload_pool_config() const;
     void reset_memory_pools();
 
+    // Phase 4: adaptive profiles. The profiler observes outgoing payloads
+    // and applies the predefined decision rules at window boundaries. It
+    // never overrides a component the user configured explicitly.
+    void set_adaptive_config(const AdaptiveProfilerConfig& config);
+    const AdaptiveProfilerConfig& adaptive_config() const;
+    void reset_adaptive_profiler();
+    bool dictionary_explicit() const;
+    bool optimizer_explicit() const;
+    bool stream_explicit() const;
+
+    // Applies optimization settings (profile or adaptive decisions) without
+    // marking components as explicitly configured.
+    void apply_optimization_settings(
+        const AdaptiveDictionaryConfig& dictionary,
+        const RuntimeOptimizerConfig& optimizer,
+        const StreamOptimizerConfig& stream
+    ) const;
+
 private:
     SchemaRegistry registry_;
-    RuntimeOptimizerConfig optimizer_config_;
+    mutable RuntimeOptimizerConfig optimizer_config_;
     mutable AdaptiveDictionary dictionary_;
     mutable StreamOptimizer stream_optimizer_;
     mutable BufferPool buffer_pool_;
     mutable PayloadPool payload_pool_;
+    mutable AdaptiveProfiler adaptive_profiler_;
+    bool dictionary_explicit_ = false;
+    bool optimizer_explicit_ = false;
+    bool stream_explicit_ = false;
 
     // Fast-path cache for repeated schema lookups
     mutable std::string cached_schema_name_;

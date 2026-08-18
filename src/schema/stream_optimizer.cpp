@@ -475,6 +475,15 @@ void StreamOptimizer::optimize_outgoing(
     }
 }
 
+void StreamOptimizer::reset_delta_state()
+{
+    last_payload_by_schema_.clear();
+    delta_seq_by_schema_.clear();
+    record_count_by_schema_.clear();
+    last_decoded_by_schema_.clear();
+    expected_delta_seq_by_schema_.clear();
+}
+
 bool StreamOptimizer::flush_batched(Buffer& out_packet)
 {
     if (batched_packets_.empty())

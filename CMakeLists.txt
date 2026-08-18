@@ -47,6 +47,8 @@ target_sources(
         src/schema/json_types.cpp
         src/schema/schema_config.cpp
         src/schema/fast_codec.cpp
+        src/schema/profiles.cpp
+        src/schema/adaptive_profiler.cpp
         src/schema/packet_layout.cpp
         src/schema/runtime_optimizer.cpp
         src/schema/adaptive_dictionary.cpp
@@ -205,6 +207,10 @@ add_test(NAME fast_codec COMMAND test_fast_codec)
 add_executable(test_delta_stream tests/test_delta_stream.cpp)
 target_link_libraries(test_delta_stream PRIVATE keydrop)
 add_test(NAME delta_stream COMMAND test_delta_stream)
+
+add_executable(test_adaptive_profiler tests/test_adaptive_profiler.cpp)
+target_link_libraries(test_adaptive_profiler PRIVATE keydrop)
+add_test(NAME adaptive_profiler COMMAND test_adaptive_profiler)
 
 add_executable(
     test_packet_layout
@@ -560,6 +566,17 @@ target_link_libraries(
         keydrop
 )
 
+add_executable(
+    adaptive_profiles_benchmark
+    benchmarks/adaptive_profiles_benchmark.cpp
+)
+
+target_link_libraries(
+    adaptive_profiles_benchmark
+    PRIVATE
+        keydrop
+)
+
 # Tests must retain assertion checks in Release benchmark builds.  Without this,
 # NDEBUG can compile out both checks and accidental side effects inside asserts.
 set(KEYDROP_TEST_TARGETS
@@ -571,6 +588,7 @@ set(KEYDROP_TEST_TARGETS
     test_schema_config
     test_fast_codec
     test_delta_stream
+    test_adaptive_profiler
     test_packet_layout
     test_schema_registry
     test_schema_validator
@@ -631,8 +649,10 @@ set_target_properties(
     test_schema_config
     test_fast_codec
     test_delta_stream
+    test_adaptive_profiler
     fastpath_benchmark
     stateful_bandwidth_benchmark
+    adaptive_profiles_benchmark
     keydrop_cli
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
