@@ -546,6 +546,70 @@ SchemaRuntimeResult SchemaRuntime::send_ordered(
     );
 }
 
+SchemaRuntimeResult SchemaRuntime::fast_encode(
+    const std::string& schema_name,
+    const FieldValue* values,
+    usize count,
+    Buffer& out_packet
+) const
+{
+    const FastCodec* codec = registry_.find_fast_codec_by_name(schema_name);
+    if (codec == nullptr)
+    {
+        return {SchemaRuntimeCode::schema_not_found, "Schema not found: " + schema_name};
+    }
+
+    const FastCodecResult result = codec->encode(values, count, out_packet);
+    if (!result.ok())
+    {
+        return {SchemaRuntimeCode::mapping_failed, result.message};
+    }
+
+    return {SchemaRuntimeCode::ok, ""};
+}
+
+SchemaRuntimeResult SchemaRuntime::fast_decode(
+    const Buffer& packet,
+    std::string& out_schema_name,
+    FastDecodedField* out_fields,
+    usize max_fields,
+    usize& out_count
+) const
+{
+    out_count = 0;
+    if (packet.size() < 2)
+    {
+        return {SchemaRuntimeCode::packet_too_small, "Packet too small to contain message_id."};
+    }
+
+    if (packet.data()[0] == 0xFC)
+    {
+        return {SchemaRuntimeCode::decode_failed, "Stream batch envelope; use receive_stream()."};
+    }
+
+    const u16 message_id = static_cast<u16>(packet.data()[0]) | (static_cast<u16>(packet.data()[1]) << 8);
+    const FastCodec* codec = registry_.find_fast_codec_by_message_id(message_id);
+    if (codec == nullptr)
+    {
+        return {SchemaRuntimeCode::schema_not_found, "Schema not found for message_id."};
+    }
+
+    usize count = 0;
+    const FastCodecResult result = codec->decode(packet, out_fields, max_fields, count, dictionary_);
+    if (!result.ok())
+    {
+        const SchemaRuntimeCode code =
+            result.code == FastCodecCode::message_id_mismatch
+            ? SchemaRuntimeCode::schema_mismatch
+            : SchemaRuntimeCode::decode_failed;
+        return {code, result.message};
+    }
+
+    out_schema_name = codec->schema().schema_name;
+    out_count = count;
+    return {SchemaRuntimeCode::ok, ""};
+}
+
 SchemaRuntimeResult SchemaRuntime::receive(
     const Buffer& packet,
     std::string& out_schema_name,

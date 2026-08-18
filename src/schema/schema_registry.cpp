@@ -41,6 +41,7 @@ SchemaRegistryStatus SchemaRegistry::register_schema(const SchemaDef& schema)
     layouts_by_name_.insert(
         std::make_pair(schema.schema_name, build_packet_layout(schema))
     );
+    fast_codecs_by_name_.emplace(schema.schema_name, FastCodec(schema));
 
     return {
         SchemaRegistryStatusCode::ok,
@@ -94,6 +95,30 @@ const PacketLayout* SchemaRegistry::find_layout_by_message_id(u16 message_id) co
     return find_layout_by_name(id_it->second);
 }
 
+const FastCodec* SchemaRegistry::find_fast_codec_by_name(
+    const std::string& schema_name
+) const
+{
+    const auto it = fast_codecs_by_name_.find(schema_name);
+    if (it == fast_codecs_by_name_.end())
+    {
+        return nullptr;
+    }
+
+    return &(it->second);
+}
+
+const FastCodec* SchemaRegistry::find_fast_codec_by_message_id(u16 message_id) const
+{
+    const auto id_it = name_by_message_id_.find(message_id);
+    if (id_it == name_by_message_id_.end())
+    {
+        return nullptr;
+    }
+
+    return find_fast_codec_by_name(id_it->second);
+}
+
 usize SchemaRegistry::size() const
 {
     return schemas_by_name_.size();
@@ -104,6 +129,7 @@ void SchemaRegistry::clear()
     schemas_by_name_.clear();
     name_by_message_id_.clear();
     layouts_by_name_.clear();
+    fast_codecs_by_name_.clear();
 }
 
 }

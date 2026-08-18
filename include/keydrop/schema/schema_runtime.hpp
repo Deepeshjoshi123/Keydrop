@@ -6,6 +6,7 @@
 
 #include "keydrop/core/buffer.hpp"
 #include "keydrop/core/buffer_pool.hpp"
+#include "keydrop/schema/fast_codec.hpp"
 #include "keydrop/schema/field_mapper.hpp"
 #include "keydrop/schema/json_types.hpp"
 #include "keydrop/schema/adaptive_dictionary.hpp"
@@ -57,6 +58,26 @@ public:
         const std::string& schema_name,
         const OrderedPayload& payload,
         Buffer& out_packet
+    ) const;
+
+    // Stateless fast path (Phase 2). encode writes into out_packet, reusing
+    // its reserved capacity; decode returns borrowed BufferView fields that
+    // remain valid while `packet` is alive. The fast path skips the generic
+    // validation walk, so use it for trusted, schema-known data; the general
+    // send/receive paths remain available for dynamic or untrusted inputs.
+    SchemaRuntimeResult fast_encode(
+        const std::string& schema_name,
+        const FieldValue* values,
+        usize count,
+        Buffer& out_packet
+    ) const;
+
+    SchemaRuntimeResult fast_decode(
+        const Buffer& packet,
+        std::string& out_schema_name,
+        FastDecodedField* out_fields,
+        usize max_fields,
+        usize& out_count
     ) const;
 
     SchemaRuntimeResult receive(

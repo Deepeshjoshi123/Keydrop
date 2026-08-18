@@ -46,6 +46,7 @@ target_sources(
         src/schema/field_mapper.cpp
         src/schema/json_types.cpp
         src/schema/schema_config.cpp
+        src/schema/fast_codec.cpp
         src/schema/packet_layout.cpp
         src/schema/runtime_optimizer.cpp
         src/schema/adaptive_dictionary.cpp
@@ -196,6 +197,10 @@ add_test(
 add_executable(test_schema_config tests/test_schema_config.cpp)
 target_link_libraries(test_schema_config PRIVATE keydrop)
 add_test(NAME schema_config COMMAND test_schema_config)
+
+add_executable(test_fast_codec tests/test_fast_codec.cpp)
+target_link_libraries(test_fast_codec PRIVATE keydrop)
+add_test(NAME fast_codec COMMAND test_fast_codec)
 
 add_executable(
     test_packet_layout
@@ -524,6 +529,22 @@ target_link_libraries(
         keydrop
 )
 
+add_executable(
+    fastpath_benchmark
+    benchmarks/fastpath_benchmark.cpp
+)
+
+target_link_libraries(
+    fastpath_benchmark
+    PRIVATE
+        keydrop
+)
+
+add_test(
+    NAME fastpath_benchmark
+    COMMAND fastpath_benchmark 20000
+)
+
 # Tests must retain assertion checks in Release benchmark builds.  Without this,
 # NDEBUG can compile out both checks and accidental side effects inside asserts.
 set(KEYDROP_TEST_TARGETS
@@ -533,6 +554,7 @@ set(KEYDROP_TEST_TARGETS
     test_encoder
     test_schema_types
     test_schema_config
+    test_fast_codec
     test_packet_layout
     test_schema_registry
     test_schema_validator
@@ -591,6 +613,8 @@ set_target_properties(
     benchmark_runner
     stream_optimizer_benchmark
     test_schema_config
+    test_fast_codec
+    fastpath_benchmark
     keydrop_cli
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib

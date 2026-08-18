@@ -142,6 +142,28 @@ Use `keydrop_cli compatibility` to compare the schema ID, version, and
 fingerprint at each endpoint before enabling stateful dictionary or stream
 modes. Full command documentation is in `docs/phase1_yaml_json.md`.
 
+### Stateless fast path (Phase 2)
+
+For high-rate, trusted, schema-known data, `fast_encode` / `fast_decode`
+skip the generic validation walk and decode string/bytes fields as
+zero-copy views into the packet:
+
+```cpp
+FieldValue values[3] = {FieldValue::from_u16(23), FieldValue::from_u16(71),
+                        FieldValue::from_string("sensor-01")};
+Buffer packet;
+runtime.fast_encode("SensorReading", values, 3, packet);   // reuses packet's capacity
+
+FastDecodedField fields[3];
+std::string schema_name;
+usize count = 0;
+runtime.fast_decode(packet, schema_name, fields, 3, count); // fields[2].view -> packet bytes
+```
+
+Keep the packet alive while using decoded views, and keep using
+`send`/`receive` for dynamic or untrusted inputs. See
+`docs/phase2_fast_path.md` and `./build/bin/fastpath_benchmark`.
+
 ## Helper Scripts
 
 ```bash

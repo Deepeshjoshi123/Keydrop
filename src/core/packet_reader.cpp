@@ -140,6 +140,21 @@ std::vector<byte> PacketReader::read_bytes(usize size)
     return out;
 }
 
+void PacketReader::skip(usize size)
+{
+    if (remaining() < size)
+    {
+        throw std::out_of_range("PacketReader skip out of range");
+    }
+
+    cursor_ += size;
+}
+
+const Buffer& PacketReader::buffer() const
+{
+    return buffer_;
+}
+
 void PacketReader::reset()
 {
     cursor_ = 0;

@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "keydrop/schema/fast_codec.hpp"
 #include "keydrop/schema/packet_layout.hpp"
 #include "keydrop/schema/schema_types.hpp"
 
@@ -35,6 +36,8 @@ public:
     const SchemaDef* find_by_message_id(u16 message_id) const;
     const PacketLayout* find_layout_by_name(const std::string& schema_name) const;
     const PacketLayout* find_layout_by_message_id(u16 message_id) const;
+    const FastCodec* find_fast_codec_by_name(const std::string& schema_name) const;
+    const FastCodec* find_fast_codec_by_message_id(u16 message_id) const;
 
     usize size() const;
     void clear();
@@ -43,6 +46,7 @@ private:
     std::unordered_map<std::string, SchemaDef> schemas_by_name_;
     std::unordered_map<u16, std::string> name_by_message_id_;
     std::unordered_map<std::string, PacketLayout> layouts_by_name_;
+    std::unordered_map<std::string, FastCodec> fast_codecs_by_name_;
 };
 
 }
