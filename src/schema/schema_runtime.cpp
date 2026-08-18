@@ -290,6 +290,30 @@ bool json_value_to_field_value(
     return false;
 }
 
+const char* json_value_type_to_string(JsonValueType type)
+{
+    switch (type)
+    {
+    case JsonValueType::integer: return "integer";
+    case JsonValueType::decimal: return "decimal";
+    case JsonValueType::string: return "string";
+    case JsonValueType::bytes: return "hex bytes";
+    }
+    return "unknown";
+}
+
+std::string json_value_display_string(const JsonValue& value)
+{
+    switch (value.type)
+    {
+    case JsonValueType::integer: return std::to_string(value.integer_value);
+    case JsonValueType::decimal: return std::to_string(value.decimal_value);
+    case JsonValueType::string: return "\"" + value.string_value + "\"";
+    case JsonValueType::bytes: return "\"0x bytes\"";
+    }
+    return "unknown";
+}
+
 JsonValue field_value_to_json_value(const FieldValue& field_value)
 {
     switch (field_value.type)
@@ -812,13 +836,19 @@ SchemaRuntimeResult SchemaRuntime::send_json(
         const JsonObject::const_iterator it = json_payload.find(field.name);
         if (it == json_payload.end())
         {
-            return {SchemaRuntimeCode::json_conversion_failed, "Missing required JSON field: " + field.name};
+            return {SchemaRuntimeCode::json_conversion_failed, "Missing required JSON field '" + field.name + "'. Add the field or update the schema."};
         }
 
         FieldValue mapped_value;
         if (!json_value_to_field_value(it->second, field.type, mapped_value))
         {
-            return {SchemaRuntimeCode::json_conversion_failed, "JSON type incompatible with schema for field: " + field.name};
+            return {
+                SchemaRuntimeCode::json_conversion_failed,
+                "Field '" + field.name + "' expects " + field_type_to_string(field.type)
+                    + " but received " + json_value_type_to_string(it->second.type)
+                    + " with value " + json_value_display_string(it->second)
+                    + ". Correct the JSON value or update the schema."
+            };
         }
 
         payload[field.name] = mapped_value;
@@ -838,7 +868,7 @@ SchemaRuntimeResult SchemaRuntime::send_json(
 
         if (!found)
         {
-            return {SchemaRuntimeCode::json_conversion_failed, "Unknown extra JSON field: " + it->first};
+            return {SchemaRuntimeCode::json_conversion_failed, "Unknown extra JSON field '" + it->first + "'. Remove it or update the schema."};
         }
     }
 

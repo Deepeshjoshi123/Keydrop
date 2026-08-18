@@ -127,6 +127,21 @@ The `configs/` directory contains JSON files that define what your application n
 
 Use `send_json()` / `receive_json()` if you want to drive Keydrop directly from these JSON configs at runtime.
 
+### Beginner YAML + JSON workflow
+
+Phase 1 adds a dependency-free configuration workflow. Start with
+`configs/beginner_sensor.yaml` and `configs/beginner_sensor.json`:
+
+```bash
+./build/bin/keydrop_cli validate integration/configs/beginner_sensor.yaml
+./build/bin/keydrop_cli inspect integration/configs/beginner_sensor.yaml SensorReading
+./build/bin/keydrop_cli encode integration/configs/beginner_sensor.yaml SensorReading integration/configs/beginner_sensor.json
+```
+
+Use `keydrop_cli compatibility` to compare the schema ID, version, and
+fingerprint at each endpoint before enabling stateful dictionary or stream
+modes. Full command documentation is in `docs/phase1_yaml_json.md`.
+
 ## Helper Scripts
 
 ```bash

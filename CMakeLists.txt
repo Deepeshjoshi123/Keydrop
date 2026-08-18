@@ -45,6 +45,7 @@ target_sources(
         src/schema/schema_validator.cpp
         src/schema/field_mapper.cpp
         src/schema/json_types.cpp
+        src/schema/schema_config.cpp
         src/schema/packet_layout.cpp
         src/schema/runtime_optimizer.cpp
         src/schema/adaptive_dictionary.cpp
@@ -102,6 +103,9 @@ target_link_libraries(
     PRIVATE
         keydrop
 )
+
+add_executable(keydrop_cli tools/keydrop_cli.cpp)
+target_link_libraries(keydrop_cli PRIVATE keydrop)
 
 # Integration examples
 add_subdirectory(integration)
@@ -188,6 +192,10 @@ add_test(
     NAME schema_types
     COMMAND test_schema_types
 )
+
+add_executable(test_schema_config tests/test_schema_config.cpp)
+target_link_libraries(test_schema_config PRIVATE keydrop)
+add_test(NAME schema_config COMMAND test_schema_config)
 
 add_executable(
     test_packet_layout
@@ -524,6 +532,7 @@ set(KEYDROP_TEST_TARGETS
     test_packet_reader
     test_encoder
     test_schema_types
+    test_schema_config
     test_packet_layout
     test_schema_registry
     test_schema_validator
@@ -581,6 +590,8 @@ set_target_properties(
     test_benchmark_report
     benchmark_runner
     stream_optimizer_benchmark
+    test_schema_config
+    keydrop_cli
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
