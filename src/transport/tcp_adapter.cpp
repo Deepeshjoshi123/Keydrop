@@ -17,8 +17,11 @@
 #else
 
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <netinet/in.h>
+#include <sys/select.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #endif
@@ -82,6 +85,15 @@ void close_native_socket(NativeSocket socket)
 TransportResult fail_result(TransportStatusCode code, const std::string& message)
 {
     return {code, message, 0};
+}
+
+void sleep_ms(usize ms)
+{
+#ifdef _WIN32
+    ::Sleep(static_cast<DWORD>(ms));
+#else
+    ::usleep(static_cast<useconds_t>(ms) * 1000);
+#endif
 }
 
 std::string socket_error_message(const char* prefix)
@@ -172,6 +184,21 @@ bool fill_address(const TransportEndpoint& endpoint, sockaddr_in& out_address)
 
 } // namespace
 
+TcpAdapter::TcpAdapter(const TcpConfig& config)
+    : config_(config)
+{
+}
+
+void TcpAdapter::configure(const TcpConfig& config)
+{
+    config_ = config;
+}
+
+const TcpConfig& TcpAdapter::config() const
+{
+    return config_;
+}
+
 TcpAdapter::~TcpAdapter()
 {
     (void)close();
@@ -200,6 +227,9 @@ TransportResult TcpAdapter::connect(const TransportEndpoint& endpoint)
         return fail_result(TransportStatusCode::already_connected, "TCP adapter is already connected.");
     }
 
+    last_endpoint_ = endpoint;
+    has_last_endpoint_ = true;
+
     std::string initialization_error;
     if (!platform::ensure_socket_subsystem(initialization_error))
     {
@@ -222,13 +252,56 @@ TransportResult TcpAdapter::connect(const TransportEndpoint& endpoint)
     }
 
     state_ = ConnectionState::connecting;
-    if (::connect(socket, reinterpret_cast<sockaddr*>(&address), sizeof(address)) != 0)
+    bool connected_ok = false;
+
+    if (config_.connect_timeout_ms == 0)
+    {
+        connected_ok = ::connect(socket, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == 0;
+    }
+    else
+    {
+        // Non-blocking connect bounded by connect_timeout_ms.
+#ifdef _WIN32
+        u_long non_blocking = 1;
+        (void)::ioctlsocket(socket, FIONBIO, &non_blocking);
+#else
+        const int flags = ::fcntl(socket, F_GETFL, 0);
+        (void)::fcntl(socket, F_SETFL, flags | O_NONBLOCK);
+#endif
+        const SocketIoResult rc = ::connect(socket, reinterpret_cast<sockaddr*>(&address), sizeof(address));
+        if (rc == 0)
+        {
+            connected_ok = true;
+        }
+        else if (wait_until_writable(from_native_socket(socket), config_.connect_timeout_ms))
+        {
+            int so_error = 0;
+#ifdef _WIN32
+            int error_size = sizeof(so_error);
+            (void)::getsockopt(socket, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&so_error), &error_size);
+#else
+            socklen_t error_size = sizeof(so_error);
+            (void)::getsockopt(socket, SOL_SOCKET, SO_ERROR, &so_error, &error_size);
+#endif
+            connected_ok = so_error == 0;
+        }
+#ifdef _WIN32
+        u_long blocking = 0;
+        (void)::ioctlsocket(socket, FIONBIO, &blocking);
+#else
+        const int blocking_flags = ::fcntl(socket, F_GETFL, 0);
+        (void)::fcntl(socket, F_SETFL, blocking_flags & ~O_NONBLOCK);
+#endif
+    }
+
+    if (!connected_ok)
     {
         close_native_socket(socket);
         state_ = ConnectionState::failed;
-        return fail_result(TransportStatusCode::connect_failed, socket_error_message("connect failed"));
+        return fail_result(TransportStatusCode::connect_failed, socket_error_message("connect failed or timed out"));
     }
 
+    apply_timeouts(from_native_socket(socket));
     socket_fd_ = from_native_socket(socket);
     peer_fd_ = platform::kInvalidSocket;
     local_port_ = endpoint.port;
@@ -326,6 +399,7 @@ TransportResult TcpAdapter::accept_connection()
 
     close_socket(peer_fd_);
     peer_fd_ = from_native_socket(accepted_socket);
+    apply_timeouts(peer_fd_);
     state_ = ConnectionState::connected;
     return {TransportStatusCode::ok, "TCP client accepted.", 0};
 }
@@ -340,8 +414,117 @@ TransportResult TcpAdapter::close()
     return {TransportStatusCode::ok, "TCP adapter closed.", 0};
 }
 
+TransportResult TcpAdapter::reconnect()
+{
+    if (state_ == ConnectionState::connected)
+    {
+        return {TransportStatusCode::already_connected, "TCP adapter is already connected.", 0};
+    }
+
+    if (!has_last_endpoint_)
+    {
+        return fail_result(TransportStatusCode::not_connected, "No previous endpoint to reconnect to.");
+    }
+
+    return connect(last_endpoint_);
+}
+
+const TransportEndpoint& TcpAdapter::last_endpoint() const
+{
+    return last_endpoint_;
+}
+
+bool TcpAdapter::has_last_endpoint() const
+{
+    return has_last_endpoint_;
+}
+
+void TcpAdapter::apply_timeouts(std::uintptr_t socket_handle)
+{
+    if (config_.send_timeout_ms == 0 && config_.receive_timeout_ms == 0)
+    {
+        return;
+    }
+
+    const NativeSocket socket = to_native_socket(socket_handle);
+#ifdef _WIN32
+    if (config_.send_timeout_ms != 0)
+    {
+        const DWORD ms = static_cast<DWORD>(config_.send_timeout_ms);
+        (void)::setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<const char*>(&ms), sizeof(ms));
+    }
+    if (config_.receive_timeout_ms != 0)
+    {
+        const DWORD ms = static_cast<DWORD>(config_.receive_timeout_ms);
+        (void)::setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&ms), sizeof(ms));
+    }
+#else
+    if (config_.send_timeout_ms != 0)
+    {
+        timeval send_timeout;
+        send_timeout.tv_sec = static_cast<time_t>(config_.send_timeout_ms / 1000);
+        send_timeout.tv_usec = static_cast<suseconds_t>((config_.send_timeout_ms % 1000) * 1000);
+        (void)::setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, &send_timeout, sizeof(send_timeout));
+    }
+    if (config_.receive_timeout_ms != 0)
+    {
+        timeval receive_timeout;
+        receive_timeout.tv_sec = static_cast<time_t>(config_.receive_timeout_ms / 1000);
+        receive_timeout.tv_usec = static_cast<suseconds_t>((config_.receive_timeout_ms % 1000) * 1000);
+        (void)::setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &receive_timeout, sizeof(receive_timeout));
+    }
+#endif
+}
+
+bool TcpAdapter::wait_until_writable(std::uintptr_t socket_handle, usize timeout_ms)
+{
+    const NativeSocket socket = to_native_socket(socket_handle);
+    fd_set write_set;
+    FD_ZERO(&write_set);
+    FD_SET(socket, &write_set);
+    timeval timeout;
+    timeout.tv_sec = static_cast<long>(timeout_ms / 1000);
+    timeout.tv_usec = static_cast<long>((timeout_ms % 1000) * 1000);
+    const int ready = ::select(static_cast<int>(socket + 1), nullptr, &write_set, nullptr, &timeout);
+    return ready > 0;
+}
+
+bool TcpAdapter::ensure_connected()
+{
+    if (state_ == ConnectionState::connected)
+    {
+        return true;
+    }
+
+    if (config_.reconnect_attempts == 0 || !has_last_endpoint_)
+    {
+        return false;
+    }
+
+    for (usize attempt = 0; attempt < config_.reconnect_attempts; ++attempt)
+    {
+        if (config_.reconnect_delay_ms > 0)
+        {
+            sleep_ms(config_.reconnect_delay_ms);
+        }
+
+        const TransportResult result = connect(last_endpoint_);
+        if (result.ok())
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 TransportResult TcpAdapter::send(const Buffer& packet)
 {
+    if (state_ != ConnectionState::connected && !ensure_connected())
+    {
+        return fail_result(TransportStatusCode::not_connected, "TCP adapter is not connected.");
+    }
+
     const std::uintptr_t socket_handle = active_socket();
     if (socket_handle == platform::kInvalidSocket || state_ != ConnectionState::connected)
     {
@@ -373,6 +556,11 @@ TransportResult TcpAdapter::send(const Buffer& packet)
 
 TransportReceiveResult TcpAdapter::receive()
 {
+    if (state_ != ConnectionState::connected && !ensure_connected())
+    {
+        return {TransportStatusCode::not_connected, "TCP adapter is not connected.", {}};
+    }
+
     const std::uintptr_t socket_handle = active_socket();
     if (socket_handle == platform::kInvalidSocket || state_ != ConnectionState::connected)
     {
@@ -400,6 +588,59 @@ TransportReceiveResult TcpAdapter::receive()
     }
 
     return {TransportStatusCode::ok, "TCP packet received.", packet};
+}
+
+TransportResult TcpAdapter::send_raw(const byte* data, usize size)
+{
+    if (state_ != ConnectionState::connected && !ensure_connected())
+    {
+        return fail_result(TransportStatusCode::not_connected, "TCP adapter is not connected.");
+    }
+
+    const std::uintptr_t socket_handle = active_socket();
+    if (socket_handle == platform::kInvalidSocket || state_ != ConnectionState::connected)
+    {
+        return fail_result(TransportStatusCode::not_connected, "TCP adapter is not connected.");
+    }
+
+    if (!write_all(to_native_socket(socket_handle), data, size))
+    {
+        state_ = ConnectionState::failed;
+        return fail_result(TransportStatusCode::send_failed, socket_error_message("raw send failed"));
+    }
+
+    return {TransportStatusCode::ok, "Raw bytes sent.", size};
+}
+
+TransportReceiveResult TcpAdapter::receive_raw(usize max_bytes)
+{
+    if (state_ != ConnectionState::connected && !ensure_connected())
+    {
+        return {TransportStatusCode::not_connected, "TCP adapter is not connected.", {}};
+    }
+
+    const std::uintptr_t socket_handle = active_socket();
+    if (socket_handle == platform::kInvalidSocket || state_ != ConnectionState::connected)
+    {
+        return {TransportStatusCode::not_connected, "TCP adapter is not connected.", {}};
+    }
+
+    Buffer packet;
+    packet.resize(max_bytes == 0 ? 1 : max_bytes);
+    const SocketIoResult received = ::recv(
+        to_native_socket(socket_handle),
+        reinterpret_cast<char*>(packet.mutable_bytes()),
+        static_cast<int>(max_bytes),
+        0
+    );
+    if (received <= 0)
+    {
+        state_ = ConnectionState::failed;
+        return {TransportStatusCode::receive_failed, socket_error_message("raw receive failed"), {}};
+    }
+
+    packet.resize(static_cast<usize>(received));
+    return {TransportStatusCode::ok, "Raw bytes received.", packet};
 }
 
 u16 TcpAdapter::local_port() const

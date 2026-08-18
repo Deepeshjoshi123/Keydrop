@@ -30,7 +30,12 @@ struct SchedulerResult {
 
 class TransportScheduler {
 public:
-    void enqueue(const Buffer& packet);
+    // Phase 6 backpressure: when max_pending is set (nonzero), enqueue
+    // rejects packets beyond the limit instead of growing unboundedly.
+    void set_max_pending(usize max_pending);
+    usize max_pending() const;
+
+    bool enqueue(const Buffer& packet);
     SchedulerResult flush(Transport& transport);
     void clear();
 
@@ -39,6 +44,7 @@ public:
 
 private:
     std::deque<Buffer> queue_;
+    usize max_pending_ = 0;
 };
 
 }

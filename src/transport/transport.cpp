@@ -10,6 +10,7 @@ const char* transport_kind_to_string(TransportKind kind)
     {
     case TransportKind::tcp: return "tcp";
     case TransportKind::websocket: return "websocket";
+    case TransportKind::udp: return "udp";
     }
 
     return "unknown";

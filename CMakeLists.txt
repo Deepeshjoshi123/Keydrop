@@ -58,6 +58,7 @@ target_sources(
         src/transport/transport.cpp
         src/transport/tcp_adapter.cpp
         src/transport/websocket_adapter.cpp
+        src/transport/udp_adapter.cpp
         src/transport/transport_config.cpp
         src/transport/transport_scheduler.cpp
 )
@@ -219,6 +220,21 @@ add_test(NAME fuzz_reliability COMMAND test_fuzz_reliability)
 add_executable(test_compatibility tests/test_compatibility.cpp)
 target_link_libraries(test_compatibility PRIVATE keydrop)
 add_test(NAME compatibility COMMAND test_compatibility)
+
+add_executable(test_tcp_reliability tests/test_tcp_reliability.cpp)
+target_link_libraries(test_tcp_reliability PRIVATE keydrop)
+add_test(NAME tcp_reliability COMMAND test_tcp_reliability)
+set_tests_properties(tcp_reliability PROPERTIES SKIP_RETURN_CODE 77)
+
+add_executable(test_websocket_handshake tests/test_websocket_handshake.cpp)
+target_link_libraries(test_websocket_handshake PRIVATE keydrop)
+add_test(NAME websocket_handshake COMMAND test_websocket_handshake)
+set_tests_properties(websocket_handshake PROPERTIES SKIP_RETURN_CODE 77)
+
+add_executable(test_udp_adapter tests/test_udp_adapter.cpp)
+target_link_libraries(test_udp_adapter PRIVATE keydrop)
+add_test(NAME udp_adapter COMMAND test_udp_adapter)
+set_tests_properties(udp_adapter PROPERTIES SKIP_RETURN_CODE 77)
 
 add_executable(
     test_packet_layout
@@ -585,6 +601,23 @@ target_link_libraries(
         keydrop
 )
 
+add_executable(
+    transport_bytes_benchmark
+    benchmarks/transport_bytes_benchmark.cpp
+)
+
+target_link_libraries(
+    transport_bytes_benchmark
+    PRIVATE
+        keydrop
+)
+
+target_include_directories(
+    transport_bytes_benchmark
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/tests
+)
+
 # Tests must retain assertion checks in Release benchmark builds.  Without this,
 # NDEBUG can compile out both checks and accidental side effects inside asserts.
 set(KEYDROP_TEST_TARGETS
@@ -599,6 +632,9 @@ set(KEYDROP_TEST_TARGETS
     test_adaptive_profiler
     test_fuzz_reliability
     test_compatibility
+    test_tcp_reliability
+    test_websocket_handshake
+    test_udp_adapter
     test_packet_layout
     test_schema_registry
     test_schema_validator
@@ -662,9 +698,13 @@ set_target_properties(
     test_adaptive_profiler
     test_fuzz_reliability
     test_compatibility
+    test_tcp_reliability
+    test_websocket_handshake
+    test_udp_adapter
     fastpath_benchmark
     stateful_bandwidth_benchmark
     adaptive_profiles_benchmark
+    transport_bytes_benchmark
     keydrop_cli
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib

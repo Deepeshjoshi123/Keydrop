@@ -2,9 +2,25 @@
 
 namespace keydrop {
 
-void TransportScheduler::enqueue(const Buffer& packet)
+void TransportScheduler::set_max_pending(usize max_pending)
 {
+    max_pending_ = max_pending;
+}
+
+usize TransportScheduler::max_pending() const
+{
+    return max_pending_;
+}
+
+bool TransportScheduler::enqueue(const Buffer& packet)
+{
+    if (max_pending_ != 0 && queue_.size() >= max_pending_)
+    {
+        return false; // backpressure: caller must flush or drop
+    }
+
     queue_.push_back(packet);
+    return true;
 }
 
 SchedulerResult TransportScheduler::flush(Transport& transport)
