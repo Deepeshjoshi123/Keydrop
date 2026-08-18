@@ -202,6 +202,10 @@ add_executable(test_fast_codec tests/test_fast_codec.cpp)
 target_link_libraries(test_fast_codec PRIVATE keydrop)
 add_test(NAME fast_codec COMMAND test_fast_codec)
 
+add_executable(test_delta_stream tests/test_delta_stream.cpp)
+target_link_libraries(test_delta_stream PRIVATE keydrop)
+add_test(NAME delta_stream COMMAND test_delta_stream)
+
 add_executable(
     test_packet_layout
     tests/test_packet_layout.cpp
@@ -545,6 +549,17 @@ add_test(
     COMMAND fastpath_benchmark 20000
 )
 
+add_executable(
+    stateful_bandwidth_benchmark
+    benchmarks/stateful_bandwidth_benchmark.cpp
+)
+
+target_link_libraries(
+    stateful_bandwidth_benchmark
+    PRIVATE
+        keydrop
+)
+
 # Tests must retain assertion checks in Release benchmark builds.  Without this,
 # NDEBUG can compile out both checks and accidental side effects inside asserts.
 set(KEYDROP_TEST_TARGETS
@@ -555,6 +570,7 @@ set(KEYDROP_TEST_TARGETS
     test_schema_types
     test_schema_config
     test_fast_codec
+    test_delta_stream
     test_packet_layout
     test_schema_registry
     test_schema_validator
@@ -614,7 +630,9 @@ set_target_properties(
     stream_optimizer_benchmark
     test_schema_config
     test_fast_codec
+    test_delta_stream
     fastpath_benchmark
+    stateful_bandwidth_benchmark
     keydrop_cli
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib

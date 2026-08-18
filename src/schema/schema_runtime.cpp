@@ -977,8 +977,15 @@ SchemaRuntimeResult SchemaRuntime::send_stream(
         return send_result;
     }
 
+    const SchemaDef* schema = registry_.find_by_name(schema_name);
+    if (schema == nullptr)
+    {
+        out_has_packet = false;
+        return {SchemaRuntimeCode::schema_not_found, "Schema not found: " + schema_name};
+    }
+
     StreamOptimizationOutput stream_out;
-    stream_optimizer_.optimize_outgoing(schema_name, payload, base_packet, stream_out);
+    stream_optimizer_.optimize_outgoing(*schema, schema_name, payload, base_packet, stream_out);
     out_has_packet = stream_out.emit_now;
     if (out_has_packet)
     {
@@ -1002,6 +1009,58 @@ SchemaRuntimeResult SchemaRuntime::receive_stream(
 ) const
 {
     out_messages.clear();
+    if (packet.empty())
+    {
+        return {SchemaRuntimeCode::decode_failed, "Empty stream packet."};
+    }
+
+    // Control packet: dictionary reset (Phase 3A). No payload follows.
+    if (packet.data()[0] == StreamOptimizer::kControlMarker)
+    {
+        dictionary_.reset();
+        return {SchemaRuntimeCode::ok, "Dictionary reset applied."};
+    }
+
+    // Stateful delta packet (Phase 3B/3C): expand against the last decoded
+    // payload for the schema, then decode the rebuilt full packet.
+    if (packet.data()[0] == StreamOptimizer::kDeltaMarker)
+    {
+        if (packet.size() < 6)
+        {
+            return {SchemaRuntimeCode::decode_failed, "Delta packet too small."};
+        }
+
+        const u16 message_id = static_cast<u16>(packet.data()[1]) | (static_cast<u16>(packet.data()[2]) << 8);
+        const SchemaDef* schema = registry_.find_by_message_id(message_id);
+        if (schema == nullptr)
+        {
+            return {SchemaRuntimeCode::schema_not_found, "Schema not found for delta packet message_id."};
+        }
+
+        Buffer full_packet;
+        NamedPayload merged_payload;
+        if (!stream_optimizer_.expand_delta(*schema, packet, full_packet, merged_payload))
+        {
+            return {
+                SchemaRuntimeCode::decode_failed,
+                "Delta packet rejected (sequence mismatch or missing keyframe). Wait for the next full packet."
+            };
+        }
+
+        std::string schema_name;
+        NamedPayloadLease payload_lease = payload_pool_.lease_named(0);
+        NamedPayload& payload = payload_lease.get();
+        const SchemaRuntimeResult result = receive(full_packet, schema_name, payload);
+        if (!result.ok())
+        {
+            return result;
+        }
+
+        stream_optimizer_.record_decoded_delta(schema_name, payload);
+        out_messages.push_back(std::make_pair(schema_name, payload));
+        return {SchemaRuntimeCode::ok, "Delta stream packet decoded."};
+    }
+
     std::deque<Buffer> packets;
     if (!stream_optimizer_.expand_incoming(packet, packets))
     {
@@ -1019,6 +1078,7 @@ SchemaRuntimeResult SchemaRuntime::receive_stream(
             return result;
         }
 
+        stream_optimizer_.record_decoded(schema_name, payload);
         out_messages.push_back(std::make_pair(schema_name, payload));
         packets.pop_front();
     }
@@ -1060,6 +1120,14 @@ SchemaRuntimeResult SchemaRuntime::receive_recovered_stream(
     }
 
     return {SchemaRuntimeCode::ok, "Recovered synchronized stream packets."};
+}
+
+SchemaRuntimeResult SchemaRuntime::send_dictionary_reset(Buffer& out_packet) const
+{
+    out_packet.clear();
+    out_packet.write(StreamOptimizer::kControlMarker);
+    out_packet.write(0x00);
+    return {SchemaRuntimeCode::ok, ""};
 }
 
 void SchemaRuntime::set_stream_optimizer_config(const StreamOptimizerConfig& config)

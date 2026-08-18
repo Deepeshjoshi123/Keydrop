@@ -133,6 +133,10 @@ public:
         usize& out_skipped_bytes
     ) const;
 
+    // Phase 3: emit a dictionary-reset control packet for the peer.
+    // receive_stream() recognizes it and resets the local dictionary.
+    SchemaRuntimeResult send_dictionary_reset(Buffer& out_packet) const;
+
     const SchemaRegistry& registry() const;
     void set_optimizer_config(const RuntimeOptimizerConfig& config);
     const RuntimeOptimizerConfig& optimizer_config() const;
