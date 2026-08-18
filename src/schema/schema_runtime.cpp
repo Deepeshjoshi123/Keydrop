@@ -1000,6 +1000,21 @@ SchemaRuntimeResult SchemaRuntime::send_stream(
     if (out_has_packet)
     {
         out_packet = stream_out.packet;
+        if (reliability_config_.enable_crc32)
+        {
+            Buffer wrapped;
+            wrapped.write(kCrcWrapperMarker);
+            const u32 crc = CorruptionDetector::crc32(
+                out_packet.data().data(),
+                out_packet.size()
+            );
+            wrapped.write(static_cast<byte>(crc & 0xFF));
+            wrapped.write(static_cast<byte>((crc >> 8) & 0xFF));
+            wrapped.write(static_cast<byte>((crc >> 16) & 0xFF));
+            wrapped.write(static_cast<byte>((crc >> 24) & 0xFF));
+            wrapped.append(out_packet);
+            out_packet = wrapped;
+        }
     }
     return {SchemaRuntimeCode::ok, "Stream packet processed."};
 }
@@ -1010,6 +1025,21 @@ SchemaRuntimeResult SchemaRuntime::flush_stream(
 ) const
 {
     out_has_packet = stream_optimizer_.flush_batched(out_packet);
+    if (out_has_packet && reliability_config_.enable_crc32)
+    {
+        Buffer wrapped;
+        wrapped.write(kCrcWrapperMarker);
+        const u32 crc = CorruptionDetector::crc32(
+            out_packet.data().data(),
+            out_packet.size()
+        );
+        wrapped.write(static_cast<byte>(crc & 0xFF));
+        wrapped.write(static_cast<byte>((crc >> 8) & 0xFF));
+        wrapped.write(static_cast<byte>((crc >> 16) & 0xFF));
+        wrapped.write(static_cast<byte>((crc >> 24) & 0xFF));
+        wrapped.append(out_packet);
+        out_packet = wrapped;
+    }
     return {SchemaRuntimeCode::ok, out_has_packet ? "Batched stream packet flushed." : "No batched packets pending."};
 }
 
@@ -1024,8 +1054,37 @@ SchemaRuntimeResult SchemaRuntime::receive_stream(
         return {SchemaRuntimeCode::decode_failed, "Empty stream packet."};
     }
 
+    // Phase 5: CRC32 envelope. Verify and unwrap before any dispatch so a
+    // corrupted stream packet is rejected, never decoded.
+    const Buffer* working = &packet;
+    Buffer unwrapped;
+    if (packet.data()[0] == kCrcWrapperMarker)
+    {
+        if (packet.size() < 5)
+        {
+            return {SchemaRuntimeCode::corruption_detected, "CRC wrapper too small."};
+        }
+
+        const u32 stored_crc =
+            static_cast<u32>(packet.data()[1])
+            | (static_cast<u32>(packet.data()[2]) << 8)
+            | (static_cast<u32>(packet.data()[3]) << 16)
+            | (static_cast<u32>(packet.data()[4]) << 24);
+        const u32 actual_crc = CorruptionDetector::crc32(
+            packet.data().data() + 5,
+            packet.size() - 5
+        );
+        if (stored_crc != actual_crc)
+        {
+            return {SchemaRuntimeCode::corruption_detected, "Stream packet CRC32 mismatch."};
+        }
+
+        unwrapped.append(packet.data().data() + 5, packet.size() - 5);
+        working = &unwrapped;
+    }
+
     // Control packet: dictionary reset (Phase 3A). No payload follows.
-    if (packet.data()[0] == StreamOptimizer::kControlMarker)
+    if (working->data()[0] == StreamOptimizer::kControlMarker)
     {
         dictionary_.reset();
         return {SchemaRuntimeCode::ok, "Dictionary reset applied."};
@@ -1033,14 +1092,14 @@ SchemaRuntimeResult SchemaRuntime::receive_stream(
 
     // Stateful delta packet (Phase 3B/3C): expand against the last decoded
     // payload for the schema, then decode the rebuilt full packet.
-    if (packet.data()[0] == StreamOptimizer::kDeltaMarker)
+    if (working->data()[0] == StreamOptimizer::kDeltaMarker)
     {
-        if (packet.size() < 6)
+        if (working->size() < 6)
         {
             return {SchemaRuntimeCode::decode_failed, "Delta packet too small."};
         }
 
-        const u16 message_id = static_cast<u16>(packet.data()[1]) | (static_cast<u16>(packet.data()[2]) << 8);
+        const u16 message_id = static_cast<u16>(working->data()[1]) | (static_cast<u16>(working->data()[2]) << 8);
         const SchemaDef* schema = registry_.find_by_message_id(message_id);
         if (schema == nullptr)
         {
@@ -1049,7 +1108,7 @@ SchemaRuntimeResult SchemaRuntime::receive_stream(
 
         Buffer full_packet;
         NamedPayload merged_payload;
-        if (!stream_optimizer_.expand_delta(*schema, packet, full_packet, merged_payload))
+        if (!stream_optimizer_.expand_delta(*schema, *working, full_packet, merged_payload))
         {
             return {
                 SchemaRuntimeCode::decode_failed,
@@ -1072,7 +1131,7 @@ SchemaRuntimeResult SchemaRuntime::receive_stream(
     }
 
     std::deque<Buffer> packets;
-    if (!stream_optimizer_.expand_incoming(packet, packets))
+    if (!stream_optimizer_.expand_incoming(*working, packets))
     {
         return {SchemaRuntimeCode::decode_failed, "Invalid stream packet envelope."};
     }
@@ -1111,7 +1170,12 @@ SchemaRuntimeResult SchemaRuntime::receive_recovered_stream(
         return {SchemaRuntimeCode::synchronization_failed, "No recoverable packet found in stream."};
     }
 
-    for (usize i = 0; i < recovered_packets.size(); ++i)
+    // Decoder memory limit: never decode more than the configured cap.
+    const usize limit = reliability_config_.max_recovered_packets;
+    const usize process_count =
+        recovered_packets.size() < limit ? recovered_packets.size() : limit;
+
+    for (usize i = 0; i < process_count; ++i)
     {
         const PacketSyncResult& recovered = recovered_packets[i];
         out_skipped_bytes += recovered.skipped_bytes;
@@ -1164,6 +1228,20 @@ const AdaptiveProfilerConfig& SchemaRuntime::adaptive_config() const
 void SchemaRuntime::reset_adaptive_profiler()
 {
     adaptive_profiler_.reset();
+}
+
+void SchemaRuntime::set_reliability_config(const ReliabilityConfig& config)
+{
+    reliability_config_ = config;
+    if (reliability_config_.max_recovered_packets == 0)
+    {
+        reliability_config_.max_recovered_packets = 1;
+    }
+}
+
+const ReliabilityConfig& SchemaRuntime::reliability_config() const
+{
+    return reliability_config_;
 }
 
 bool SchemaRuntime::dictionary_explicit() const

@@ -19,7 +19,7 @@ std::string json_escape(const std::string& s) { std::string o; for(char c:s) { i
 }
 
 u32 SchemaConfig::stable_field_id(const std::string& schema, const std::string& field) { return static_cast<u32>(fnv(schema + ":" + field)); }
-u64 SchemaConfig::fingerprint(const ConfiguredSchema& s) { u64 h=fnv(s.schema.schema_name); h=fnv("|"+std::to_string(s.schema.message_id)+"|"+std::to_string(s.version),h); for(usize i=0;i<s.schema.fields.size();++i) h=fnv("|"+s.schema.fields[i].name+":"+field_type_to_string(s.schema.fields[i].type)+":"+std::to_string(s.field_ids[i]),h); return h; }
+u64 SchemaConfig::fingerprint(const ConfiguredSchema& s) { u64 h=fnv(s.schema.schema_name); h=fnv("|"+std::to_string(s.schema.message_id)+"|"+std::to_string(s.version),h); for(usize i=0;i<s.schema.fields.size();++i){const auto&f=s.schema.fields[i];h=fnv("|"+f.name+":"+field_type_to_string(f.type)+":"+std::to_string(s.field_ids[i])+":"+(f.constraints.has_max_length?std::to_string(f.constraints.max_length):"-"),h);} return h; }
 
 SchemaConfigResult SchemaConfig::load_yaml_file(const std::string& path,std::vector<ConfiguredSchema>& out) { std::ifstream f(path); if(!f) return {SchemaConfigCode::io_error,"Cannot open configuration: "+path}; std::ostringstream s;s<<f.rdbuf();return load_yaml(s.str(),out); }
 SchemaConfigResult SchemaConfig::load_yaml(const std::string& yaml,std::vector<ConfiguredSchema>& out) {

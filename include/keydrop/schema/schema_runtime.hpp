@@ -16,6 +16,7 @@
 #include "keydrop/schema/schema_registry.hpp"
 #include "keydrop/schema/schema_validator.hpp"
 #include "keydrop/schema/stream_optimizer.hpp"
+#include "keydrop/reliability/corruption_detector.hpp"
 
 namespace keydrop {
 
@@ -159,6 +160,11 @@ public:
     void set_adaptive_config(const AdaptiveProfilerConfig& config);
     const AdaptiveProfilerConfig& adaptive_config() const;
     void reset_adaptive_profiler();
+
+    // Phase 5: reliability settings (CRC32 stream envelopes, decoder
+    // memory limits).
+    void set_reliability_config(const ReliabilityConfig& config);
+    const ReliabilityConfig& reliability_config() const;
     bool dictionary_explicit() const;
     bool optimizer_explicit() const;
     bool stream_explicit() const;
@@ -179,6 +185,7 @@ private:
     mutable BufferPool buffer_pool_;
     mutable PayloadPool payload_pool_;
     mutable AdaptiveProfiler adaptive_profiler_;
+    ReliabilityConfig reliability_config_;
     bool dictionary_explicit_ = false;
     bool optimizer_explicit_ = false;
     bool stream_explicit_ = false;

@@ -48,6 +48,21 @@ struct CorruptionCheckOptions {
     usize crc32_offset = 0;
 };
 
+// Phase 5 runtime reliability settings.
+struct ReliabilityConfig {
+    // Wrap every stream packet (send_stream / flush_stream) in a CRC32
+    // envelope: [0xF9][crc32 LE][payload]. receive_stream verifies and
+    // strips it; a mismatch is rejected as corruption, never decoded.
+    bool enable_crc32 = false;
+
+    // Decoder memory limit: maximum packets receive_recovered_stream will
+    // decode from a recovered stream. Extra packets are left undecoded.
+    usize max_recovered_packets = 256;
+};
+
+// Stream CRC wrapper marker (envelope produced when enable_crc32 is on).
+constexpr byte kCrcWrapperMarker = 0xF9;
+
 class CorruptionDetector {
 public:
     static CorruptionCheckResult check_packet(
@@ -66,6 +81,7 @@ public:
     );
 
     static u32 crc32(const Buffer& packet);
+    static u32 crc32(const byte* data, usize size);
 };
 
 }

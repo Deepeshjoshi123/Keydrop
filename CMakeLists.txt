@@ -212,6 +212,14 @@ add_executable(test_adaptive_profiler tests/test_adaptive_profiler.cpp)
 target_link_libraries(test_adaptive_profiler PRIVATE keydrop)
 add_test(NAME adaptive_profiler COMMAND test_adaptive_profiler)
 
+add_executable(test_fuzz_reliability tests/test_fuzz_reliability.cpp)
+target_link_libraries(test_fuzz_reliability PRIVATE keydrop)
+add_test(NAME fuzz_reliability COMMAND test_fuzz_reliability)
+
+add_executable(test_compatibility tests/test_compatibility.cpp)
+target_link_libraries(test_compatibility PRIVATE keydrop)
+add_test(NAME compatibility COMMAND test_compatibility)
+
 add_executable(
     test_packet_layout
     tests/test_packet_layout.cpp
@@ -589,6 +597,8 @@ set(KEYDROP_TEST_TARGETS
     test_fast_codec
     test_delta_stream
     test_adaptive_profiler
+    test_fuzz_reliability
+    test_compatibility
     test_packet_layout
     test_schema_registry
     test_schema_validator
@@ -650,6 +660,8 @@ set_target_properties(
     test_fast_codec
     test_delta_stream
     test_adaptive_profiler
+    test_fuzz_reliability
+    test_compatibility
     fastpath_benchmark
     stateful_bandwidth_benchmark
     adaptive_profiles_benchmark
