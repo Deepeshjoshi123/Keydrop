@@ -83,6 +83,12 @@ def main() -> int:
     parser.add_argument("--iterations", type=int, default=100_000)
     parser.add_argument("--trials", type=int, default=30)
     parser.add_argument("--skip-stream", action="store_true")
+    parser.add_argument(
+        "--official",
+        action="store_true",
+        help="classify the study as official_external_baselines and also run "
+        "the official external-library benchmark (protobuf/JSON/msgpack)",
+    )
     parser.add_argument("--generator", help="optional CMake generator")
     parser.add_argument(
         "--allow-dirty",
@@ -117,6 +123,8 @@ def main() -> int:
                "--trials", str(args.trials), "--output-dir", str(study_dir / "raw")]
     if args.skip_stream:
         command.append("--skip-stream")
+    if args.official:
+        command.append("--official")
     configure = ["cmake", "-S", str(ROOT), "-B", str(build_dir), "-DCMAKE_BUILD_TYPE=Release"]
     if args.generator:
         configure.extend(["-G", args.generator])
@@ -128,7 +136,11 @@ def main() -> int:
     manifest: dict[str, object] = {
         "study_format": 1,
         "status": "created",
-        "study_kind": "development_validation" if dirty_paths else "trusted_baseline",
+        "study_kind": (
+            "official_external_baselines"
+            if args.official
+            else ("development_validation" if dirty_paths else "trusted_baseline")
+        ),
         "publication_eligible": not dirty_paths,
         "created_at_utc": timestamp,
         "study_id": study_id,
@@ -156,7 +168,12 @@ def main() -> int:
             "iterations": args.iterations,
             "trials": args.trials,
             "stream_benchmark": not args.skip_stream,
-            "benchmark_classification": "in-repository development baselines",
+            "official_baselines": args.official,
+            "benchmark_classification": (
+                "official_external_baselines"
+                if args.official
+                else "in-repository development baselines"
+            ),
         },
         "commands": {
             "configure": configure,

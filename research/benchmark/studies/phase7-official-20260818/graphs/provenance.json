@@ -1,0 +1,30 @@
+{
+  "generated_files": [
+    "packet_size_comparison.svg",
+    "packet_size_comparison.png",
+    "packet_size_comparison.pdf",
+    "encoding_latency.svg",
+    "encoding_latency.png",
+    "encoding_latency.pdf",
+    "decoding_latency.svg",
+    "decoding_latency.png",
+    "decoding_latency.pdf",
+    "throughput.svg",
+    "throughput.png",
+    "throughput.pdf",
+    "memory_allocation_count.svg",
+    "memory_allocation_count.png",
+    "memory_allocation_count.pdf",
+    "memory_usage.svg",
+    "memory_usage.png",
+    "memory_usage.pdf",
+    "payload_reduction.svg",
+    "payload_reduction.png",
+    "payload_reduction.pdf"
+  ],
+  "plotter": "research/benchmark/scripts/plot_graphs.py",
+  "processed_input": "processed/format_summary.csv",
+  "processed_input_sha256": "3de2d4d43c07be485714b96909c639bc6ee9feba3220038946ec75e42e8e5ea2",
+  "source_commit": "22edd19e4b53b833da7ad2150c7d19e4d567630d",
+  "study_id": "phase7-official-20260818"
+}

@@ -21,6 +21,16 @@ FORMAT_METRICS = [
     "throughput_per_sec",
 ]
 
+OFFICIAL_METRICS = [
+    "packet_bytes",
+    "steady_state_avg_bytes",
+    "avg_encode_ns",
+    "avg_decode_ns",
+    "throughput_per_sec",
+    "allocations_per_encode",
+    "allocated_bytes_per_encode",
+]
+
 STREAM_METRICS = [
     "messages",
     "decoded_messages",
@@ -70,7 +80,14 @@ def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
     if not rows:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = list(rows[0].keys())
+    # Union of keys in first-appearance order: groups may legitimately
+    # have different metric columns (e.g. stateful rows report
+    # steady_state_avg_bytes instead of packet_bytes).
+    fieldnames: list[str] = []
+    for row in rows:
+        for key in row:
+            if key not in fieldnames:
+                fieldnames.append(key)
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
@@ -114,6 +131,14 @@ def main() -> int:
             aggregate(stream_rows, "benchmark", STREAM_METRICS),
         )
 
+    official_path = raw_dir / "official_trials.csv"
+    if official_path.exists():
+        official_rows = [row for row in read_csv(official_path) if row.get("format")]
+        write_csv(
+            processed_dir / "official_summary.csv",
+            aggregate(official_rows, "format", OFFICIAL_METRICS),
+        )
+
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     provenance = {
         "study_id": manifest.get("study_id"),
@@ -121,6 +146,7 @@ def main() -> int:
         "raw_inputs": {
             str(format_path.relative_to(study_dir)): sha256(format_path) if format_path.exists() else None,
             str(stream_path.relative_to(study_dir)): sha256(stream_path) if stream_path.exists() else None,
+            str(official_path.relative_to(study_dir)): sha256(official_path) if official_path.exists() else None,
         },
         "processor": str(Path(__file__).relative_to(ROOT)),
     }

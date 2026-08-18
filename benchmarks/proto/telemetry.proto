@@ -1,0 +1,37 @@
+// Official external baseline schemas (Phase 7).
+//
+// These messages are compiled with the system `protoc` at build time so the
+// comparison uses official Protocol Buffers generated C++ code. The field
+// sets mirror the Keydrop benchmark workloads exactly:
+//
+//   FixedRecord  — W1: the fixed three-field telemetry record
+//                  (temperature, humidity, device_id)
+//   StringRecord — W3: the repeated-string workload
+//                  (device_id, status, unit, value)
+//   TimeRecord   — W4: the periodic timestamp + sensor workload
+//                  (timestamp, temperature)
+
+syntax = "proto3";
+
+package keydrop.bench;
+
+message FixedRecord {
+    uint32 temperature = 1;
+    uint32 humidity = 2;
+    string device_id = 3;
+}
+
+message StringRecord {
+    string device_id = 1;
+    string status = 2;
+    string unit = 3;
+    uint32 value = 4;
+}
+
+message TimeRecord {
+    uint64 timestamp = 1;
+    string device_id = 2;
+    uint32 temperature = 3;
+    uint32 humidity = 4;
+    uint32 status = 5;
+}

@@ -57,11 +57,38 @@ def parse_key_values(text: str) -> dict[str, str]:
 
 
 def write_rows(path: Path, rows: list[dict[str, object]]) -> None:
+    # Union of keys in first-appearance order: rows may legitimately have
+    # different fields (e.g. the official benchmark's per-format blocks and
+    # its stream rows).
+    fieldnames: list[str] = []
+    for row in rows:
+        for key in row:
+            if key not in fieldnames:
+                fieldnames.append(key)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
+
+
+def parse_key_value_blocks(text: str) -> list[dict[str, str]]:
+    """Parses the official-baselines output: one row per `format=` block."""
+    rows: list[dict[str, str]] = []
+    current: dict[str, str] = {}
+    for line in text.splitlines():
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if key == "format" and current:
+            rows.append(current)
+            current = {}
+        current[key] = value
+    if current:
+        rows.append(current)
+    return rows
 
 
 def main() -> int:
@@ -70,6 +97,12 @@ def main() -> int:
     parser.add_argument("--iterations", type=int, default=1000)
     parser.add_argument("--trials", type=int, default=30)
     parser.add_argument("--skip-stream", action="store_true")
+    parser.add_argument(
+        "--official",
+        action="store_true",
+        help="also run the official external baselines benchmark "
+        "(separate classification: official_external_baselines)",
+    )
     parser.add_argument("--output-dir", required=True, help="empty study raw-output directory")
     args = parser.parse_args()
 
@@ -88,6 +121,9 @@ def main() -> int:
 
     format_rows: list[dict[str, object]] = []
     stream_rows: list[dict[str, object]] = []
+    official_rows: list[dict[str, object]] = []
+
+    official_runner = exe_path(build_dir, "official_baselines_benchmark") if args.official else None
 
     for trial in range(args.trials):
         report_path = output_dir / "reports" / f"format_report_trial_{trial:03d}.txt"
@@ -112,11 +148,24 @@ def main() -> int:
             )
             stream_rows.append({"trial": trial, **metadata, **parse_key_values(stream.stdout)})
 
+        if official_runner is not None:
+            official = subprocess.run(
+                [str(official_runner), str(args.iterations)],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+                check=True,
+            )
+            for row in parse_key_value_blocks(official.stdout):
+                official_rows.append({"trial": trial, **row})
+
     if not format_rows:
         raise RuntimeError("benchmark runner emitted no parseable format rows")
     write_rows(output_dir / "format_trials.csv", format_rows)
     if stream_rows:
         write_rows(output_dir / "stream_trials.csv", stream_rows)
+    if official_rows:
+        write_rows(output_dir / "official_trials.csv", official_rows)
 
     return 0
 

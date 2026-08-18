@@ -109,6 +109,56 @@ target_link_libraries(
 )
 
 add_executable(keydrop_cli tools/keydrop_cli.cpp)
+
+# Phase 7: official external baselines. Separate targets and study
+# classification — never conflated with the in-repository baselines.
+find_package(Protobuf QUIET)
+find_package(nlohmann_json QUIET)
+find_path(MSGPACK_INCLUDE_DIR msgpack.hpp)
+find_library(MSGPACK_LIBRARY NAMES msgpackc)
+
+set(OFFICIAL_BENCH_SOURCES
+    benchmarks/official_baselines_benchmark.cpp
+)
+
+if(Protobuf_FOUND)
+    protobuf_generate_cpp(
+        OFFICIAL_PROTO_SRCS
+        OFFICIAL_PROTO_HDRS
+        ${PROJECT_SOURCE_DIR}/benchmarks/proto/telemetry.proto
+    )
+    list(APPEND OFFICIAL_BENCH_SOURCES ${OFFICIAL_PROTO_SRCS})
+endif()
+
+add_executable(
+    official_baselines_benchmark
+    ${OFFICIAL_BENCH_SOURCES}
+)
+
+target_link_libraries(
+    official_baselines_benchmark
+    PRIVATE
+        keydrop
+)
+
+if(Protobuf_FOUND)
+    target_compile_definitions(official_baselines_benchmark PRIVATE KEYDROP_HAS_PROTOBUF)
+    target_link_libraries(official_baselines_benchmark PRIVATE protobuf::libprotobuf)
+    target_include_directories(official_baselines_benchmark PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+
+if(nlohmann_json_FOUND)
+    target_compile_definitions(official_baselines_benchmark PRIVATE KEYDROP_HAS_JSON)
+    target_link_libraries(official_baselines_benchmark PRIVATE nlohmann_json::nlohmann_json)
+endif()
+
+if(MSGPACK_INCLUDE_DIR AND MSGPACK_LIBRARY)
+    target_compile_definitions(official_baselines_benchmark PRIVATE KEYDROP_HAS_MSGPACK)
+    target_include_directories(official_baselines_benchmark PRIVATE ${MSGPACK_INCLUDE_DIR})
+    target_link_libraries(official_baselines_benchmark PRIVATE ${MSGPACK_LIBRARY})
+endif()
+
+add_test(NAME official_baselines COMMAND official_baselines_benchmark 2000)
 target_link_libraries(keydrop_cli PRIVATE keydrop)
 
 # Integration examples
@@ -705,6 +755,7 @@ set_target_properties(
     stateful_bandwidth_benchmark
     adaptive_profiles_benchmark
     transport_bytes_benchmark
+    official_baselines_benchmark
     keydrop_cli
     PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib

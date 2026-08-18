@@ -1,0 +1,10 @@
+{
+  "processor": "research/benchmark/scripts/process_results.py",
+  "raw_inputs": {
+    "raw/format_trials.csv": "d2b74fe15a53119ab1d1b8633abae95b863db07f64f86d4b9528435579ba69c8",
+    "raw/official_trials.csv": "0e610468c43b9dca8bf94e7acce556958dfc1553a2af7f11d895600c0e01f2af",
+    "raw/stream_trials.csv": "a9bd4ba7ced165e6c6c64efca9265e9f1352e2e3272cb388b8a05c5223e728d0"
+  },
+  "source_commit": "22edd19e4b53b833da7ad2150c7d19e4d567630d",
+  "study_id": "phase7-official-20260818"
+}

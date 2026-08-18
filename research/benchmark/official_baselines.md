@@ -4,17 +4,24 @@ The existing `benchmark_runner` is an **in-repository development baseline**.
 Its `json`, `protobuf`, and `messagepack` labels are local implementations and
 must never be presented as results from official third-party libraries.
 
-Official-library work is a separate benchmark suite, not an extension of the
-current CSVs. Before it is enabled, the study manifest must identify:
+## Implemented (Phase 7)
 
-- the exact library and version (for example, a named JSON library, Google
-  Protocol Buffers C++, and MessagePack C++);
-- generated schema/source inputs and all compiler options;
-- allocator or arena configuration;
-- the workload and whether the measurement is stateless or stateful; and
-- a distinct `benchmark_classification` such as `official_external_baselines`.
+`official_baselines_benchmark` compares against the official libraries,
+detected by CMake and version-labeled in every output row:
+
+- JSON: nlohmann::json (named exactly, version from its headers);
+- Protocol Buffers: `protoc`-generated C++ for `benchmarks/proto/telemetry.proto`;
+- MessagePack: msgpack-c (`libmsgpack-dev`); unavailable libraries print
+  `<format>_unavailable=1` instead of fabricated rows.
+
+The study runner classifies runs with `--official` as
+`official_external_baselines` and writes `official_trials.csv` beside the
+in-repository CSVs, with distinct `format=` labels per row. In-repository
+rows inside an official study are labeled `keydrop_stateless` /
+`keydrop_stateful` — the two classifications are never merged.
+
+Workload definitions, measured tables, and interpretation guidance:
+`docs/phase7_official_study.md`.
 
 Do not add official-library rows to an `in-repository development baselines`
-study, and do not use those local rows to make claims about external libraries.
-The external adapters belong in their own CMake targets and manifest-backed
-studies once their dependencies are deliberately selected and pinned.
+study, and do not use in-repo rows to make claims about external libraries.
