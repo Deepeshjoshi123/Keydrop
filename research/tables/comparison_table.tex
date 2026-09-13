@@ -1,0 +1,25 @@
+\begin{table*}[t]
+\centering
+\caption{Comparison of Existing Telemetry Serialization Systems}
+\label{tab:comparison}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{|p{1.7cm}|p{1.25cm}|p{2.05cm}|p{1.35cm}|p{1.0cm}|p{2.0cm}|p{1.55cm}|p{1.45cm}|p{1.25cm}|p{1.2cm}|p{1.35cm}|p{1.75cm}|}
+\hline
+\textbf{Framework} & \textbf{Binary Format} & \textbf{Schema Support} & \textbf{Human Readable} & \textbf{Zero Copy} & \textbf{Runtime Optimization} & \textbf{Transport Independent} & \textbf{Telemetry Oriented} & \textbf{Cross Platform} & \textbf{Open Source} & \textbf{Language Neutral} & \textbf{Implementation Verified} \\
+\hline
+JSON & No & Optional via JSON Schema & Yes & No & No & Yes & No & Yes & Open standard & Yes & Official docs \\
+\hline
+Protocol Buffers & Yes & Required .proto schema & No & No & Generated-code optimization & Yes & No & Yes & Yes & Yes & Official docs \\
+\hline
+MessagePack & Yes & No & No & No & No & Yes & No & Yes & Yes & Yes & Official docs \\
+\hline
+FlatBuffers & Yes & Required .fbs schema & No & Yes & No & Yes & No & Yes & Yes & Yes & Official docs \\
+\hline
+Cap'n Proto & Yes & Required schema & No & Yes & No & Yes & No & Yes & Yes & Yes & Official docs \\
+\hline
+Keydrop & Yes & Yes & No & No & Yes & Yes & Yes & Yes & Yes & No & Repository verified \\
+\hline
+\end{tabular}
+\end{table*}

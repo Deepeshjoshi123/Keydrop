@@ -1,4 +1,3 @@
-
 # Build Output
 build/
 out/
@@ -24,7 +23,28 @@ Makefile
 .vscode/
 .idea/
 
-# OS
+# Generated test, benchmark, and coverage output
+/Testing/
+/coverage/
+/benchmark-results/
+*.gcda
+*.gcno
+*.gcov
+
+# Rendered visual assets are not part of the runnable Keydrop source
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.svg
+*.pdf
+
+# Python cache and temporary/runtime files
+__pycache__/
+*.py[cod]
+
+# Operating-system metadata
 .DS_Store
 Thumbs.db
 
