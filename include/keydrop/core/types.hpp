@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 namespace keydrop {
@@ -21,5 +22,9 @@ using i64 = std::int64_t;
 // Floating
 using f32 = float;
 using f64 = double;
+
+// Utility
+using byte = u8;
+using usize = std::size_t;
 
 }

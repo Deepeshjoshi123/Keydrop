@@ -1,0 +1,15 @@
+keydrop: 1
+
+schemas:
+  SensorReading:
+    id: 42
+    version: 1
+    profile: telemetry-balanced
+    fields:
+      - key: temperature
+        type: uint16
+      - key: humidity
+        type: uint16
+      - key: device_id
+        type: string
+        max_length: 64

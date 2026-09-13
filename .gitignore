@@ -1,9 +1,9 @@
-# Build Output
-build/
-out/
-dist/
+# Build output and CMake-generated files
+/build/
+/out/
+/dist/
+/cmake-build-*/
 
-# CMake
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
@@ -11,17 +11,23 @@ compile_commands.json
 CTestTestfile.cmake
 Makefile
 
-# Binaries
+# Compiled binaries and object files
 *.exe
 *.dll
 *.so
+*.dylib
 *.a
+*.lib
 *.o
 *.obj
+*.pdb
+*.ilk
 
-# IDE
+# Local development environment
 .vscode/
 .idea/
+*.user
+*.suo
 
 # Generated test, benchmark, and coverage output
 /Testing/
@@ -44,16 +50,11 @@ Makefile
 __pycache__/
 *.py[cod]
 
-# Operating-system metadata
-.DS_Store
-Thumbs.db
-
-# Logs
+# Logs and temporary/runtime files
 *.log
-
-# Temporary
 *.tmp
 *.temp
 
-# Internal planning docs
-docs/keydrop_integration_plan.md
+# Operating-system metadata
+.DS_Store
+Thumbs.db
