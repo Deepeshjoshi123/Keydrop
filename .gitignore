@@ -1,9 +1,9 @@
-
 # Build output and CMake-generated files
 /build/
 /out/
 /dist/
 /cmake-build-*/
+
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
@@ -37,10 +37,6 @@ Makefile
 *.gcno
 *.gcov
 
-# Research paper material and internal documentation
-/research/
-/docs/
-
 # Rendered visual assets are not part of the runnable Keydrop source
 *.png
 *.jpg
@@ -53,6 +49,8 @@ Makefile
 # Python cache and temporary/runtime files
 __pycache__/
 *.py[cod]
+
+# Logs and temporary/runtime files
 *.log
 *.tmp
 *.temp
@@ -60,4 +58,3 @@ __pycache__/
 # Operating-system metadata
 .DS_Store
 Thumbs.db
-

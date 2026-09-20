@@ -1,0 +1,98 @@
+{
+  "commands": {
+    "benchmark": [
+      "/home/hyper/venv-ardupilot/bin/python3",
+      "/home/hyper/Documents/Deepesh/Keydrop/research/benchmark/scripts/run_benchmarks.py",
+      "--build-dir",
+      "/home/hyper/Documents/Deepesh/Keydrop/build/research",
+      "--iterations",
+      "50000",
+      "--trials",
+      "30",
+      "--output-dir",
+      "/home/hyper/Documents/Deepesh/Keydrop/research/benchmark/studies/phase7-official-20260818/raw",
+      "--official"
+    ],
+    "build": [
+      "cmake",
+      "--build",
+      "/home/hyper/Documents/Deepesh/Keydrop/build/research",
+      "--parallel"
+    ],
+    "configure": [
+      "cmake",
+      "-S",
+      "/home/hyper/Documents/Deepesh/Keydrop",
+      "-B",
+      "/home/hyper/Documents/Deepesh/Keydrop/build/research",
+      "-DCMAKE_BUILD_TYPE=Release"
+    ],
+    "plot": [
+      "/home/hyper/venv-ardupilot/bin/python3",
+      "research/benchmark/scripts/plot_graphs.py",
+      "--study",
+      "/home/hyper/Documents/Deepesh/Keydrop/research/benchmark/studies/phase7-official-20260818"
+    ],
+    "process": [
+      "/home/hyper/venv-ardupilot/bin/python3",
+      "research/benchmark/scripts/process_results.py",
+      "--study",
+      "/home/hyper/Documents/Deepesh/Keydrop/research/benchmark/studies/phase7-official-20260818"
+    ],
+    "test": [
+      "ctest",
+      "--test-dir",
+      "/home/hyper/Documents/Deepesh/Keydrop/build/research",
+      "--output-on-failure",
+      "--timeout",
+      "60"
+    ]
+  },
+  "configuration": {
+    "benchmark_classification": "official_external_baselines",
+    "build_dir": "/home/hyper/Documents/Deepesh/Keydrop/build/research",
+    "build_type": "Release",
+    "cmake_generator": "default",
+    "iterations": 50000,
+    "official_baselines": true,
+    "stream_benchmark": true,
+    "trials": 30
+  },
+  "created_at_utc": "20260818T134918Z",
+  "environment": {
+    "architecture": "x86_64",
+    "ccache_dir": "/home/hyper/Documents/Deepesh/Keydrop/build/research/.ccache",
+    "cmake": "cmake version 3.28.3",
+    "compiler": "c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "cpu_model": "AMD Ryzen 5 7520U with Radeon Graphics",
+    "logical_cpu_count": 8,
+    "memory_bytes": 16000663552,
+    "os": "Linux-7.0.0-28-generic-x86_64-with-glibc2.39",
+    "python": "3.12.3"
+  },
+  "outputs": {
+    "graphs_dir": "graphs",
+    "processed_dir": "processed",
+    "raw_dir": "raw",
+    "test_log": "test/ctest.log"
+  },
+  "publication_eligible": false,
+  "source": {
+    "branch": "performance-evaluation",
+    "commit": "22edd19e4b53b833da7ad2150c7d19e4d567630d",
+    "dirty": true,
+    "dirty_paths": [
+      "M CMakeLists.txt",
+      " M README.md",
+      " M research/benchmark/scripts/run_benchmarks.py",
+      " M research/benchmark/scripts/run_study.py",
+      "?? benchmarks/official_baselines_benchmark.cpp",
+      "?? benchmarks/proto/",
+      "?? docs/phase7_official_study.md"
+    ]
+  },
+  "status": "complete",
+  "study_format": 1,
+  "study_id": "phase7-official-20260818",
+  "study_kind": "official_external_baselines"
+}
